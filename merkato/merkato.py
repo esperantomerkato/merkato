@@ -184,11 +184,11 @@ class Merkato(object):
         if filled_difference > 0:
             if tx_type == SELL:
                 self.base_partials_balance -= filled_difference * Decimal(tx[PRICE])
-                update_merkato(self.mutex_UUID, 'base_partials_balance', self.base_partials_balance)
+                update_merkato(self.mutex_UUID, 'base_partials_balance', float(self.base_partials_balance))
                 log.info('apply_filled_difference base_partials_balance: {}'.format(self.base_partials_balance))
             if tx_type == BUY:
                 self.quote_partials_balance -= filled_difference
-                update_merkato(self.mutex_UUID, 'quote_partials_balance', self.quote_partials_balance)
+                update_merkato(self.mutex_UUID, 'quote_partials_balance', float(self.quote_partials_balance))
                 log.info('apply_filled_difference quote_partials_balance: {}'.format(self.quote_partials_balance))
 
 
@@ -237,10 +237,10 @@ class Merkato(object):
         tx_id = tx[ID]
         if tx_type == BUY:
             self.quote_partials_balance += filled_amount
-            update_merkato(self.mutex_UUID, 'quote_partials_balance', self.quote_partials_balance)
+            update_merkato(self.mutex_UUID, 'quote_partials_balance', float(self.quote_partials_balance))
         if tx_type == SELL:
             self.base_partials_balance += filled_amount  * price
-            update_merkato(self.mutex_UUID, 'base_partials_balance', self.base_partials_balance)
+            update_merkato(self.mutex_UUID, 'base_partials_balance', float(self.base_partials_balance))
         log.info('{}, orderid in filled_orders filled_amount: {} tx_id: {} '.format(tx_type, filled_amount, tx_id))
         update_merkato(self.mutex_UUID, LAST_ORDER, tx_id)
 
@@ -341,20 +341,21 @@ class Merkato(object):
         # rest of the order is filled), and therefore is unavailable when creating new
         # Merkatos. Add this amount to a field 'quote_partials_balance'.
         log.info('handle_partial_fill type {} filledqty {} tx_id {}'.format(type, filled_qty, tx_id))
+        update_merkato(self.mutex_UUID, LAST_ORDER, tx_id)
         if type == BUY:
             self.quote_partials_balance += filled_qty # may need a multiply by price
-            update_merkato(self.mutex_UUID, 'quote_partials_balance', self.quote_partials_balance)
+            update_merkato(self.mutex_UUID, 'quote_partials_balance', float(self.quote_partials_balance))
 
         elif type == SELL:
             self.base_partials_balance += filled_qty
-            update_merkato(self.mutex_UUID, 'base_partials_balance', self.base_partials_balance)
+            update_merkato(self.mutex_UUID, 'base_partials_balance', float(self.base_partials_balance))
 
         # 2. update the last order
-        update_merkato(self.mutex_UUID, LAST_ORDER, tx_id)
 
 
     def handle_market_order(self, amount, price, type):
         log.info('handle market order')
+        update_merkato(self.mutex_UUID, LAST_ORDER, last_txid)
         newest_tx_id = self.exchange.get_my_trade_history()[0][ID]
         if type == BUY:
             self.exchange.market_buy(amount, price)
@@ -384,14 +385,13 @@ class Merkato(object):
             log.info('handle_market_order: partials affected, amount: {} amount_executed: {}'.format(amount, amount_executed))
             if type == BUY:
                 self.quote_partials_balance += amount_executed
-                update_merkato(self.mutex_UUID, 'quote_partials_balance', self.quote_partials_balance)
+                update_merkato(self.mutex_UUID, 'quote_partials_balance', float(self.quote_partials_balance))
                 log.info('market buy partials after: {}'.format(self.quote_partials_balance))
             else:
                 self.base_partials_balance += amount_executed * price_numerator
-                update_merkato(self.mutex_UUID, 'base_partials_balance', self.base_partials_balance)
+                update_merkato(self.mutex_UUID, 'base_partials_balance', float(self.base_partials_balance))
                 log.info('market sell partials after {}'.format(self.base_partials_balance))
         # A market buy occurred, so we need to update the db with the latest tx
-        update_merkato(self.mutex_UUID, LAST_ORDER, last_txid)
 
 
     def update(self):
@@ -556,3 +556,4 @@ class Merkato(object):
                 writer.writerow(fieldnames)
             for tx in scrubbed_history:
                 writer.writerow(tx)
+
