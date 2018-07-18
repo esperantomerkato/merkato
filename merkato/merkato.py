@@ -557,7 +557,7 @@ class Merkato(object):
             for tx in scrubbed_history:
                 writer.writerow(tx)
 
-    def calculate_add_percentage(self, ticker_pair, coin, amount_to_add):
+    def calculate_add_percentage(self, coin, amount_to_add):
         orderbook_sum = 0
         current_orders = self.exchange.get_my_open_orders()
         for order in current_orders:
@@ -578,9 +578,9 @@ class Merkato(object):
         total_amount = orderbook_sum + old_reserves
         return amount_to_add/total_amount
 
-    def update_orders(self, ticker_pair, coin, amount_to_add):
+    def update_orders(self, coin, amount_to_add):
         self.check_balances_available(coin, amount_to_add)
-        add_percentage = self.calculate_add_percentage(ticker_pair, coin, amount_to_add)
+        add_percentage = self.calculate_add_percentage(coin, amount_to_add)
         if coin == self.exchange.coin:
             old_reserves = self.ask_reserved_balance + self.quote_partials_balance
         else:
@@ -607,15 +607,15 @@ class Merkato(object):
         allocated_pair_balances = get_allocated_pair_balances(configuration['exchange'], base, coin)
         ask_reserved_balance = self.ask_reserved_balance if coin == 'BTC' else self.ask_reserved_balance + amoount_to_add
         bid_reserved_balance = self.bid_reserved_balance + amoount_to_add if coin == 'BTC' else self.bid_reserved_balance
-        check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)          current_amount = order['amount']
-            order_type = order['type']
-            order_price = order['price']
-            amount_to_add = current_amount * (1 + add_percentage)
-            self.exchange.cancel_order(order['id'])
-            if coin == self.exchange.coin and order_type == SELL:
-                self.exchange.sell(amount_to_add, order_price)
-            if coin == self.exchange.base and order_type == BUY:
-                self.exchange.buy(amount_to_add, order_price)
+        check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
+        order_type = order['type']
+        order_price = order['price']
+        amount_to_add = current_amount * (1 + add_percentage)
+        self.exchange.cancel_order(order['id'])
+        if coin == self.exchange.coin and order_type == SELL:
+            self.exchange.sell(amount_to_add, order_price)
+        if coin == self.exchange.base and order_type == BUY:
+            self.exchange.buy(amount_to_add, order_price)
         if coin == self.exchange.coin:
             update_merkato(self.UUID, 'ask_reserved_balance', float(old_reserves * (1 + add_percentage)))
         elif coin == self.exchange.base:

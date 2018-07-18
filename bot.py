@@ -108,6 +108,12 @@ class Bot(ttk.Frame):
         self.util_frame = ttk.Frame(self, style="app.TFrame")
         self.kill_button = ttk.Button(self.util_frame, text="Kill", cursor="shuttle", command=self.kill)
         self.kill_button.grid(row=0, column=0, sticky=tk.SE, padx=(10,5), pady=(15,5))
+        self.add_assets_type = MyWidget(self.app, self.util_frame, handle="Add Asset",startVal="XMR", choices=["XMR", "LTC", "ETH", "DOGE", "PEPECASH"])
+        self.add_assets_type.grid(row=1, column=0, sticky=tk.SE, padx=(10,5), pady=(15))
+        self.add_assets_amount = MyWidget(self.app, self.util_frame, handle="amount to add", startVal=1.0, choices="entry")
+        self.add_assets_amount.grid(row=2, column=0, sticky=tk.SE, padx=(10,5), pady=(15))
+        self.add_assets_button = ttk.Button(self.util_frame, text="Add Assets", cursor="shuttle", command=self.add_assets)
+        self.add_assets_button.grid(row=3, column=0, sticky=tk.SE, padx=(10,5), pady=(15))
         # --------------------
         if not starting_stats:
             starting_stats= {"price_x": []}
@@ -119,6 +125,12 @@ class Bot(ttk.Frame):
             self.exchange_frame.grid(row = 0, column=1, sticky=tk.NE, padx=(10,10), pady=(20,5))
         self.util_frame.grid(row = 1, column=1, sticky=tk.SE, padx=(10,10), pady=(10,5))
 
+
+    def add_assets(self):
+        add_assets_amount = self.add_assets_amount.get()[0]
+        add_assets_type = self.add_assets.get()[0]
+        print('add_assets_amount', add_assets_amount, 'add_assets_type', add_assets_type)
+        # self.bot.update_orders(add_assets_type, add_assets_amount)
 
     def update(self):
         context = {}
