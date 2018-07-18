@@ -604,7 +604,7 @@ class Merkato(object):
     def check_balances_available(self, coin, amoount_to_add):
         total_pair_balances = self.exchange.get_balances()
         log.info("total pair balances: {}".format(total_pair_balances))
-        allocated_pair_balances = get_allocated_pair_balances(configuration['exchange'], base, coin)
+        allocated_pair_balances = get_allocated_pair_balances(self.exchange.name, self.exchange.base, self.exchange.coin)
         ask_reserved_balance = self.ask_reserved_balance if coin == 'BTC' else self.ask_reserved_balance + amoount_to_add
         bid_reserved_balance = self.bid_reserved_balance + amoount_to_add if coin == 'BTC' else self.bid_reserved_balance
         check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
