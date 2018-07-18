@@ -563,7 +563,6 @@ class Merkato(object):
         for order_id, order in current_orders.items():
             current_amount = order['amount']
             order_type = order['type']
-            self.exchange.cancel_order(order_id)
             if coin == self.exchange.coin and order_type == SELL:
                 orderbook_sum += current_amount
             elif coin == self.exchange.base and order_type == BUY:
@@ -590,11 +589,14 @@ class Merkato(object):
             order_type = order['type']
             order_price = order['price']
             amount_to_add = current_amount * (1 + add_percentage)
-            self.exchange.cancel_order(order['id'])
+            # self.exchange.cancel_order(order['id'])
+            print('cancel order')
             if coin == self.exchange.coin and order_type == SELL:
-                self.exchange.sell(amount_to_add, order_price)
+                # self.exchange.sell(amount_to_add, order_price)
+                print('replace sell')
             if coin == self.exchange.base and order_type == BUY:
-                self.exchange.buy(amount_to_add, order_price)
+                # self.exchange.buy(amount_to_add, order_price)
+                print('replace buy')
         if coin == self.exchange.coin:
             update_merkato(self.UUID, 'ask_reserved_balance', float(old_reserves * (1 + add_percentage)))
         elif coin == self.exchange.base:
