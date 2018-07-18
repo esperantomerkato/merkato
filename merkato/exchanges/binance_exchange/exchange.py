@@ -190,7 +190,7 @@ class BinanceExchange(ExchangeBase):
                 print('adding amount to open order bina')
                 origQty = Decimal(float(order['origQty']))
                 executedQty = Decimal(float(order['executedQty']))
-                new_dict['amount'] = origQty - executedQty
+                new_dict[id]['amount'] = origQty - executedQty
         return new_dict
 
 
