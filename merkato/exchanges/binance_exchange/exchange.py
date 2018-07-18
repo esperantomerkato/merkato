@@ -181,12 +181,11 @@ class BinanceExchange(ExchangeBase):
             id = order['orderId']
             new_dict[id] = order
             new_dict[id]['id'] = id
-            if context_formatted:
-                if order['side'] == 'BUY':
-                    new_dict[id]['type'] = 'buy'
-                else:
-                    new_dict[id]['type'] = 'sell'
+            if order['side'] == 'BUY':
+                new_dict[id]['type'] = 'buy'
             else:
+                new_dict[id]['type'] = 'sell'
+            if not context_formatted:
                 origQty = Decimal(float(order['origQty']))
                 executedQty = Decimal(float(order['executedQty']))
                 new_dict[id]['amount'] = origQty - executedQty

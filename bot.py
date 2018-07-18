@@ -108,7 +108,7 @@ class Bot(ttk.Frame):
         self.util_frame = ttk.Frame(self, style="app.TFrame")
         self.kill_button = ttk.Button(self.util_frame, text="Kill", cursor="shuttle", command=self.kill)
         self.kill_button.grid(row=0, column=0, sticky=tk.SE, padx=(10,5), pady=(15,5))
-        self.add_assets_type = MyWidget(self.app, self.util_frame, handle="Add Asset",startVal="XMR", choices=["XMR", "LTC", "ETH", "DOGE", "PEPECASH"])
+        self.add_assets_type = MyWidget(self.app, self.util_frame, handle="Add Asset",startVal="XMR", choices=["XMR", "BTC", "ETH", "DOGE", "PEPECASH"])
         self.add_assets_type.grid(row=1, column=0, sticky=tk.SE, padx=(10,5), pady=(15))
         self.add_assets_amount = MyWidget(self.app, self.util_frame, handle="amount to add", startVal=1.0, choices="entry")
         self.add_assets_amount.grid(row=2, column=0, sticky=tk.SE, padx=(10,5), pady=(15))

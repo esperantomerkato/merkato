@@ -589,18 +589,21 @@ class Merkato(object):
             order_type = order['type']
             order_price = order['price']
             amount_to_add = current_amount * (1 + add_percentage)
-            # self.exchange.cancel_order(order['id'])
+            self.exchange.cancel_order(order['id'])
             print('cancel order')
+            print('coin', coin, 'self.exchange.coin', self.exchange.coin, 'order_type', order_type )
             if coin == self.exchange.coin and order_type == SELL:
-                # self.exchange.sell(amount_to_add, order_price)
+                self.exchange.sell(amount_to_add, order_price)
                 print('replace sell')
             if coin == self.exchange.base and order_type == BUY:
-                # self.exchange.buy(amount_to_add, order_price)
+                self.exchange.buy(amount_to_add, order_price)
                 print('replace buy')
         if coin == self.exchange.coin:
             update_merkato(self.UUID, 'ask_reserved_balance', float(old_reserves * (1 + add_percentage)))
+            print('updating reserve balances')
         elif coin == self.exchange.base:
             update_merkato(self.UUID, 'bid_reserved_balance', float(old_reserves * (1 + add_percentage)))
+            print('updating reserve balances')
 
     def check_balances_available(self, coin, amoount_to_add):
         total_pair_balances = self.exchange.get_balances()
