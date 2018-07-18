@@ -129,8 +129,7 @@ class Bot(ttk.Frame):
     def add_assets(self):
         add_assets_amount = self.add_assets_amount.get()[0]
         add_assets_type = self.add_assets_type.get()[0]
-        print('add_assets_amount', add_assets_amount, 'add_assets_type', add_assets_type)
-        # self.bot.update_orders(add_assets_type, add_assets_amount)
+        self.bot.update_orders(add_assets_type, add_assets_amount)
 
     def update(self):
         context = {}
