@@ -186,6 +186,9 @@ class BinanceExchange(ExchangeBase):
                     new_dict[id]['type'] = 'buy'
                 else:
                     new_dict[id]['type'] = 'sell'
+            origQty = Decimal(float(order['origQty']))
+            executedQty = Decimal(float(order['executedQty']))
+            new_dict['amount'] = origQty - executedQty
         return new_dict
 
 
