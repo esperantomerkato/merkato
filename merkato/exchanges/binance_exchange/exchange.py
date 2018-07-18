@@ -187,7 +187,6 @@ class BinanceExchange(ExchangeBase):
                 else:
                     new_dict[id]['type'] = 'sell'
             else:
-                print('adding amount to open order bina')
                 origQty = Decimal(float(order['origQty']))
                 executedQty = Decimal(float(order['executedQty']))
                 new_dict[id]['amount'] = origQty - executedQty
