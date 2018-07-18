@@ -561,6 +561,7 @@ class Merkato(object):
         orderbook_sum = 0
         current_orders = self.exchange.get_my_open_orders()
         for order_id, order in current_orders.items():
+            print('calculate_add_percentage order', order)
             current_amount = order['amount']
             order_type = order['type']
             order_price = order['price']
