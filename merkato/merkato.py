@@ -560,12 +560,12 @@ class Merkato(object):
     def calculate_add_percentage(self, coin, amount_to_add):
         orderbook_sum = 0
         current_orders = self.exchange.get_my_open_orders()
-        for order in current_orders:
+        for order_id, order in current_orders.iteritems():
             current_amount = order['amount']
             order_type = order['type']
             order_price = order['price']
             amount_to_add = current_amount * (1 + add_percentage)
-            self.exchange.cancel_order(order['id'])
+            self.exchange.cancel_order(order_id)
             if coin == self.exchange.coin and order_type == SELL:
                 orderbook_sum += current_amount
             elif coin == self.exchange.base and order_type == BUY:
@@ -587,7 +587,7 @@ class Merkato(object):
         else:
             old_reserves = self.bid_reserved_balance + self.base_partials_balance
         current_orders = self.exchange.get_my_open_orders()
-        for order in current_orders:
+        for order_id, order in current_orders.iteritems():
             current_amount = order['amount']
             order_type = order['type']
             order_price = order['price']
