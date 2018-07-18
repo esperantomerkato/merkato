@@ -56,7 +56,7 @@ class BinanceExchange(ExchangeBase):
                 # Get current highest bid on the orderbook
                 # If ask price is lower than the highest bid, return.
 
-                if Decimal(self.get_highest_bid()) > ask:
+                if Decimal(float(self.get_highest_bid())) > ask:
                     log.info("SELL {} {} at {} on {} FAILED - would make a market order.".format(amount,self.ticker, ask, "binance"))
                     return MARKET # Maybe needs failed or something
 
@@ -105,7 +105,7 @@ class BinanceExchange(ExchangeBase):
                 # Get current lowest ask on the orderbook
                 # If bid price is higher than the lowest ask, return.
 
-                if Decimal(self.get_lowest_ask()) < bid:
+                if Decimal(float(self.get_lowest_ask())) < bid:
 
                     log.info("BUY {} {} at {} on {} FAILED - would make a market order.".format(amount, self.ticker, bid, "binance"))
                     return MARKET # Maybe needs failed or something
