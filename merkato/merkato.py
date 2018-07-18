@@ -579,6 +579,7 @@ class Merkato(object):
         return amount_to_add/total_amount
 
     def update_orders(self, coin, amount_to_add):
+        amount_to_add = Decimal(float(amount_to_add))
         self.check_balances_available(coin, amount_to_add)
         add_percentage = self.calculate_add_percentage(coin, amount_to_add)
         if coin == self.exchange.coin:
