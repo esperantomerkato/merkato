@@ -122,19 +122,19 @@ def generate_complete_merkato_configs(merkato_tuples):
 
 def get_allocated_pair_balances(exchange, base, coin):
     allocated_pair_balances = {
-        'base': 0,
-        'coin': 0
+        'base': Decimal(0),
+        'coin': Decimal(0)
     }
 
     merkatos = get_merkatos_by_exchange(exchange)
     for merkato in merkatos:
         if merkato['base'] == base:
-            allocated_pair_balances['base'] += merkato['bid_reserved_balance']
-            allocated_pair_balances['base'] += merkato['base_partials_balance']
+            allocated_pair_balances['base'] += Deciaml(merkato['bid_reserved_balance'])
+            allocated_pair_balances['base'] += Deciaml(merkato['base_partials_balance'])
 
         if merkato['alt'] == coin:
-            allocated_pair_balances['coin'] += merkato['ask_reserved_balance']
-            allocated_pair_balances['coin'] += merkato['quote_partials_balance']
+            allocated_pair_balances['coin'] += Deciaml(merkato['ask_reserved_balance'])
+            allocated_pair_balances['coin'] += Deciaml(merkato['quote_partials_balance'])
 
     return allocated_pair_balances
 
