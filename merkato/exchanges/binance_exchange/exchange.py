@@ -34,6 +34,7 @@ class BinanceExchange(ExchangeBase):
             :param ask: float
             :param ticker: string
         '''
+        print('amount', amount, 'ask', ask)
         amt_str = "{:0.0{}f}".format(amount, XMR_AMOUNT_PRECISION)
         ask_str = "{:0.0{}f}".format(ask, XMR_PRICE_PRECISION)
         log.info("Bina placing sell ask: {} amount: {}".format(ask_str, amt_str))

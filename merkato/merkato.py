@@ -213,6 +213,7 @@ class Merkato(object):
         while current_order < total_orders:
             step_adjusted_factor = Decimal(step**current_order)
             current_bid_price = Decimal(start_price/step_adjusted_factor)
+            current_bid_total = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))
             current_bid_amount = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))/current_bid_price
             amount += current_bid_amount
             
@@ -221,7 +222,7 @@ class Merkato(object):
 
             log.info('bid response {}'.format(response))
 
-            self.remove_reserve(current_bid_amount, BID_RESERVE) 
+            self.remove_reserve(current_bid_total, BID_RESERVE) 
             # TODO Release lock
             
             current_order += 1
@@ -245,7 +246,7 @@ class Merkato(object):
         update_merkato(self.mutex_UUID, LAST_ORDER, tx_id)
 
 
-    def distribute_bids(self, price, total_to_distribute, step=1.04):
+    def distribute_bids(self, price, total_to_distribute, step=1.1):
         # Allocates your market making balance on the bid side, in a way that
         # will never be completely exhausted (run out).
         # total_to_distribute is in the base currency (usually BTC)
@@ -307,7 +308,7 @@ class Merkato(object):
         log.info('allocated amount: {}'.format(prior_reserve - self.ask_reserved_balance))
 
 
-    def distribute_asks(self, price, total_to_distribute, step=1.04):
+    def distribute_asks(self, price, total_to_distribute, step=1.1):
         # Allocates your market making balance on the ask side, in a way that
         # will never be completely exhausted (run out).
 
@@ -449,12 +450,10 @@ class Merkato(object):
         
         if invalid_reserve_reduction:
             return False
-        
         if type_of_reserve == ASK_RESERVE:
             new_amount = self.ask_reserved_balance - amount
             self.ask_reserved_balance = new_amount           
-
-        else:
+        elif type_of_reserve == BID_RESERVE:
             new_amount = self.bid_reserved_balance - amount
             self.bid_reserved_balance = new_amount
 
@@ -562,23 +561,29 @@ class Merkato(object):
         current_orders = self.exchange.get_my_open_orders()
         for order_id, order in current_orders.items():
             current_amount = order['amount']
+            order_price = order['price']
             order_type = order['type']
             if coin == self.exchange.coin and order_type == SELL:
                 orderbook_sum += current_amount
             elif coin == self.exchange.base and order_type == BUY:
-                orderbook_sum += current_amount
+                orderbook_sum += float(current_amount) * float(order_price)
 
+        print('orderbook sum', orderbook_sum)
         if coin == self.exchange.coin:
             old_reserves = self.ask_reserved_balance + self.quote_partials_balance
         else:
-            old_reserves = self.bid_reserved_balance + self.base_partials_balance       
-        total_amount = orderbook_sum + old_reserves
+            old_reserves = self.bid_reserved_balance + self.base_partials_balance      
+        print('old_reserves', old_reserves) 
+        total_amount = Decimal(orderbook_sum) + old_reserves
+        print('total_amount', total_amount)
         return amount_to_add/total_amount
 
     def update_orders(self, coin, amount_to_add):
+        print('amount_to_add', amount_to_add, 'coin', coin)
         amount_to_add = Decimal(float(amount_to_add))
         self.check_balances_available(coin, amount_to_add)
         add_percentage = self.calculate_add_percentage(coin, amount_to_add)
+        print('add percentage', add_percentage)
         if coin == self.exchange.coin:
             old_reserves = self.ask_reserved_balance + self.quote_partials_balance
         else:
@@ -587,23 +592,28 @@ class Merkato(object):
         for order_id, order in current_orders.items():
             current_amount = order['amount']
             order_type = order['type']
-            order_price = order['price']
-            amount_to_add = current_amount * (1 + add_percentage)
-            self.exchange.cancel_order(order['id'])
+            order_price = Decimal(float(order['price']))
+            amount_to_add = Decimal(float(current_amount * (1 + add_percentage)))
             print('cancel order')
             print('coin', coin, 'self.exchange.coin', self.exchange.coin, 'order_type', order_type )
             if coin == self.exchange.coin and order_type == SELL:
+                self.exchange.cancel_order(order['id'])
                 self.exchange.sell(amount_to_add, order_price)
                 print('replace sell')
             if coin == self.exchange.base and order_type == BUY:
+                self.exchange.cancel_order(order['id'])
                 self.exchange.buy(amount_to_add, order_price)
                 print('replace buy')
         if coin == self.exchange.coin:
-            update_merkato(self.UUID, 'ask_reserved_balance', float(old_reserves * (1 + add_percentage)))
-            print('updating reserve balances')
+            print('old reserve balance', self.ask_reserved_balance)
+            update_merkato(self.mutex_UUID, 'ask_reserved_balance', float(old_reserves * (1 + add_percentage)))
+            self.ask_reserved_balance = Decimal(float(old_reserves * (1 + add_percentage)))
+            print('new reserve balances', self.ask_reserved_balance)
         elif coin == self.exchange.base:
-            update_merkato(self.UUID, 'bid_reserved_balance', float(old_reserves * (1 + add_percentage)))
-            print('updating reserve balances')
+            print('old reserve balance', self.bid_reserved_balance )
+            update_merkato(self.mutex_UUID, 'bid_reserved_balance', float(old_reserves * (1 + add_percentage)))
+            self.bid_reserved_balance = Decimal(float(old_reserves * (1 + add_percentage)))
+            print('new reserve balances', self.bid_reserved_balance)
 
     def check_balances_available(self, coin, amoount_to_add):
         total_pair_balances = self.exchange.get_balances()
