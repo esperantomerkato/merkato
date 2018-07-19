@@ -573,7 +573,7 @@ class Merkato(object):
             old_reserves = self.ask_reserved_balance + self.quote_partials_balance
         else:
             old_reserves = self.bid_reserved_balance + self.base_partials_balance      
-        print('old_reserves', old_reserves) 
+        print('old_reserves', old_reserves, self.quote_partials_balance, self.base_partials_balance) 
         total_amount = Decimal(orderbook_sum) + old_reserves
         print('total_amount', total_amount)
         return amount_to_add/total_amount
@@ -621,4 +621,5 @@ class Merkato(object):
         allocated_pair_balances = get_allocated_pair_balances(self.exchange.name, self.exchange.base, self.exchange.coin)
         ask_reserved_balance = self.ask_reserved_balance if coin == 'BTC' else self.ask_reserved_balance + amoount_to_add
         bid_reserved_balance = self.bid_reserved_balance + amoount_to_add if coin == 'BTC' else self.bid_reserved_balance
+        print('ask_reserved_balance', ask_reserved_balance, 'bid_reserved_balance', bid_reserved_balance)
         check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
