@@ -422,8 +422,6 @@ class Merkato(object):
         last_order  = get_last_order(self.mutex_UUID)
         
         current_history = self.exchange.get_my_trade_history(first_order)
-        if self.exchange.ticker == 'ETHBTC':
-            print('current_history', current_history)
         new_history = get_new_history(current_history, last_order)
         log.info('update new_history: {} first_order: {} last_order: {} \n'.format(new_history, first_order, last_order))
         new_transactions = []
