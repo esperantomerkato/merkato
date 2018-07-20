@@ -394,6 +394,21 @@ class Merkato(object):
                 log.info('market sell partials after {}'.format(self.base_partials_balance))
         # A market buy occurred, so we need to update the db with the latest tx
 
+    def get_context_history(self):
+        now = str(datetime.datetime.now().isoformat()[:-7].replace("T", " "))
+        last_trade_price = self.exchange.get_last_trade_price()
+        current_history = self.exchange.get_my_trade_history()
+        self.exchange.process_new_transactions(current_history, context_only=True)
+
+        context = {"price": (now, last_trade_price),
+                "filled_orders": current_history,
+                "open_orders": self.exchange.get_my_open_orders(context_formatted=True),
+                "balances": self.exchange.get_balances(),
+                "orderbook": self.exchange.get_all_orders()
+                }
+        
+        return context
+
 
     def update(self):
         ''' TODO: Function comment
@@ -407,6 +422,8 @@ class Merkato(object):
         last_order  = get_last_order(self.mutex_UUID)
         
         current_history = self.exchange.get_my_trade_history(first_order)
+        if self.exchange.ticker == 'ETHBTC':
+            print('current_history', current_history)
         new_history = get_new_history(current_history, last_order)
         log.info('update new_history: {} first_order: {} last_order: {} \n'.format(new_history, first_order, last_order))
         new_transactions = []

@@ -123,12 +123,15 @@ class App:
         self.roster[self.active_fr].config(fg="black")
 
 
-    def update_frames(self):
+    def update_frames(self, initialize=False):
         ''' TODO Function Description
         '''
         for bot, button in self.roster.items():
             try:
-                bot.update()
+                if initialize == False:
+                    bot.update()
+                else:
+                    bot.update(initial_update=True)
                 try:
                     if bot.graph.performance.get() == "inf":
                         button.config(fg="green")

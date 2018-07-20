@@ -173,6 +173,8 @@ def get_new_history(current_history, last_order):
             new_history = current_history[:index]
             new_history.reverse() # need to reverse due to the newest order at start of the list, we want oldest
             return new_history
+    if last_order == '':
+        return current_history
     return []
 
 def get_time_of_last_order(ordered_transactions):

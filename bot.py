@@ -131,7 +131,7 @@ class Bot(ttk.Frame):
         add_assets_type = self.add_assets_type.get()[0]
         self.bot.update_orders(add_assets_type, add_assets_amount)
 
-    def update(self):
+    def update(self, initial_update=False):
         context = {}
 
         if self.stub or self.bot: # then we have something to update
@@ -139,7 +139,11 @@ class Bot(ttk.Frame):
             
             if not self.stub:
                 if self.bot.initialized:
-                    context = self.bot.update()
+                    if initial_update == False:
+                        context = self.bot.update()
+                    if initial_update == True:
+                        print('doing initial update')
+                        context = self.bot.get_context_history()
                 
             else:
                 context = self.graph.fake_data()
@@ -179,6 +183,7 @@ class Bot(ttk.Frame):
         if not self.stub:
             try:
               self.bot = Merkato(**self.merk_args)
+              self.update(initial_update=True)
             except Exception as e:
                 raise Exception('bot failed to start', e)
                 e2 = traceback.format_exc()

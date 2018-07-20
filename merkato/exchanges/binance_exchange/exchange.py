@@ -264,7 +264,7 @@ class BinanceExchange(ExchangeBase):
 
         return pair_balances
 
-    def process_new_transactions(self, new_txs):
+    def process_new_transactions(self, new_txs, context_only=False):
         for trade in new_txs:
 
             if trade['isBuyer'] == True:
@@ -279,8 +279,11 @@ class BinanceExchange(ExchangeBase):
 
             trade['total'] = Decimal(trade['price']) * Decimal(trade['qty'])
             trade['amount'] = Decimal(trade['qty'])
-            order_info = self.client.get_order(symbol=self.ticker, orderId=trade['orderId'], recvWindow=10000000)
-            trade['initamount'] = order_info['origQty']
+            print('context_only', context_only)
+            if not context_only:
+                order_info = self.client.get_order(symbol=self.ticker, orderId=trade['orderId'], recvWindow=10000000)
+                trade['initamount'] = order_info['origQty']
+        print('trade_info')
 
     def get_my_trade_history(self, start=0, end=0):
         ''' TODO Function Definition

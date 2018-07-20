@@ -218,7 +218,7 @@ def start_merkatos(entered_password):
                     selectcolor="lightblue"
                     )
 
-    root.after(1000, app.update_frames)
+    root.after(1000, lambda : app.update_frames(initialize=True))
     root.after(100, app.finish_new_button())
 
     mainloop()
