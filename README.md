@@ -2,6 +2,8 @@
 
 Merkato is a Python cryptocurrency Market Making and Arbitrage bot
 
+PROPRIETARY CODE DO NOT TAKE, USE, REPURPUSE, PUBLISH, without written consent of 15chrjef a bot to track stats across assets on exchanges
+
 ### Prerequisites
 
 See [requirements.txt](https://github.com/livinginformation/merkato/blob/master/requirements.txt) for the full list of prerequisites.
@@ -62,7 +64,7 @@ See also the list of [other contributors](https://github.com/livinginformation/m
 
 ## License
 
-This project is licensed under the GPLv3 License - see the [LICENSE.md](LICENSE.md) file for details
+PROPRIETARY CODE DO NOT TAKE, USE, REPURPUSE, PUBLISH, without written consent of 15chrjef a bot to track stats across assets on exchanges
 
 ## Acknowledgments
 
