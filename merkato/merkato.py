@@ -246,7 +246,7 @@ class Merkato(object):
         update_merkato(self.mutex_UUID, LAST_ORDER, tx_id)
 
 
-    def distribute_bids(self, price, total_to_distribute, step=1.1):
+    def distribute_bids(self, price, total_to_distribute, step=1.0033):
         # Allocates your market making balance on the bid side, in a way that
         # will never be completely exhausted (run out).
         # total_to_distribute is in the base currency (usually BTC)
@@ -308,7 +308,7 @@ class Merkato(object):
         log.info('allocated amount: {}'.format(prior_reserve - self.ask_reserved_balance))
 
 
-    def distribute_asks(self, price, total_to_distribute, step=1.1):
+    def distribute_asks(self, price, total_to_distribute, step=1.0033):
         # Allocates your market making balance on the ask side, in a way that
         # will never be completely exhausted (run out).
 
