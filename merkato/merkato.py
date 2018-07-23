@@ -398,10 +398,13 @@ class Merkato(object):
         now = str(datetime.datetime.now().isoformat()[:-7].replace("T", " "))
         last_trade_price = self.exchange.get_last_trade_price()
         current_history = self.exchange.get_my_trade_history()
-        self.exchange.process_new_transactions(current_history, context_only=True)
+        first_order = get_first_order(self.mutex_UUID)
+        new_history = get_new_history(current_history, first_order)
+
+        self.exchange.process_new_transactions(new_history, context_only=True)
 
         context = {"price": (now, last_trade_price),
-                "filled_orders": current_history,
+                "filled_orders": new_history,
                 "open_orders": self.exchange.get_my_open_orders(context_formatted=True),
                 "balances": self.exchange.get_balances(),
                 "orderbook": self.exchange.get_all_orders()
