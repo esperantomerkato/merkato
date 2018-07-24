@@ -144,7 +144,10 @@ class Bot(ttk.Frame):
                     if initial_update == True:
                         print('doing initial update')
                         context = self.bot.get_context_history()
-                
+                    print('adding bid_reserved_balance')
+                    context['ask_reserved_balance'] = float(self.bot.ask_reserved_balance)
+                    context['bid_reserved_balance'] = float(self.bot.bid_reserved_balance)
+                    context['spread'] = float(self.bot.spread)
             else:
                 context = self.graph.fake_data()
 

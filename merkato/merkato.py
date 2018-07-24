@@ -7,7 +7,7 @@ import time
 import logging
 
 from decimal import *
-from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, \
+from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
     ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE
 from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
@@ -21,7 +21,7 @@ getcontext().prec = 8
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread,
                  bid_reserved_balance, ask_reserved_balance,
-                 user_interface=None, profit_margin=0, first_order=''):
+                 user_interface=None, profit_margin=0, first_order='', starting_price=.018):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
@@ -30,7 +30,7 @@ class Merkato(object):
         self.distribution_strategy = 1
         self.spread = Decimal(spread)
         self.profit_margin = Decimal(profit_margin)
-
+        self.starting_price = starting_price
         # Exchanges have a maximum number of orders every user can place. Due
         # to this, every Merkato has a reserve of coins that are not currently
         # allocated. As the price approaches unallocated regions, the reserves
@@ -62,7 +62,7 @@ class Merkato(object):
             allocated_pair_balances = get_allocated_pair_balances(configuration['exchange'], base, coin)
             check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
 
-            insert_merkato(configuration[EXCHANGE], self.mutex_UUID, base, coin, spread, bid_reserved_balance, ask_reserved_balance, first_order)
+            insert_merkato(configuration[EXCHANGE], self.mutex_UUID, base, coin, spread, bid_reserved_balance, ask_reserved_balance, first_order, starting_price)
             history = self.exchange.get_my_trade_history()
 
             log.debug('initial history: {}'.format(history))
@@ -327,7 +327,7 @@ class Merkato(object):
         current_price = (Decimal(self.exchange.get_highest_bid()) + Decimal(self.exchange.get_lowest_ask()))/2
         if self.user_interface:
             current_price = Decimal(self.user_interface.confirm_price(current_price))
-
+            update_merkato(self.mutex_UUID, STARTING_PRICE, current_price)
         ask_start = current_price + current_price*self.spread/2
         bid_start = current_price - current_price*self.spread/2
         
@@ -407,7 +407,8 @@ class Merkato(object):
                 "filled_orders": new_history,
                 "open_orders": self.exchange.get_my_open_orders(context_formatted=True),
                 "balances": self.exchange.get_balances(),
-                "orderbook": self.exchange.get_all_orders()
+                "orderbook": self.exchange.get_all_orders(),
+                "starting_price": self.starting_price
                 }
         
         return context
@@ -442,7 +443,8 @@ class Merkato(object):
                    "filled_orders": new_transactions,
                    "open_orders": self.exchange.get_my_open_orders(context_formatted=True),
                    "balances": self.exchange.get_balances(),
-                   "orderbook": self.exchange.get_all_orders()
+                   "orderbook": self.exchange.get_all_orders(),
+                   "starting_price": self.starting_price
                    }
         
         return context

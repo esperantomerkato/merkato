@@ -9,6 +9,7 @@ from matplotlib.lines import Line2D
 import datetime
 from pprint import pprint
 from   my_widget import MyWidget
+from gui_utils import get_expected_balances, get_orderbook_balances
 
 import tkinter.messagebox as MessageBox
 
@@ -279,6 +280,9 @@ class Graph(tk.Frame):
                 
         elif zero_scenario:
             performance = 0.0
+        
+        else:
+            åperformance = 0.0
 
         if type(performance) == float:
             performance_string = "{0:.3f}".format(performance)
@@ -390,6 +394,22 @@ class Graph(tk.Frame):
                 if v:
                     pprint(v[0])
         """
+        if len(self.y_price) > 0:
+            market_price = float(self.y_price[-1])
+            starting_price = data['starting_price']
+            start_base = data['bid_reserved_balance'] * 4
+            start_quote = data['ask_reserved_balance'] * 4
+            print("data['ask_reserved_balance']", data['ask_reserved_balance'], "data['bid_reserved_balance']", data['bid_reserved_balance'])
+            spread = data['spread']
+            expected_balances = get_expected_balances(market_price, starting_price, start_base, start_quote, spread, 1.0033 )
+            print('expected_balance', expected_balances)
+            orderbook_balances = get_orderbook_balances(data['open_orders'])
+            print('orderbook_balances', orderbook_balances)
+            base_profit = data['bid_reserved_balance'] + orderbook_balances[0] - expected_balances[0]
+            quote_profit = data['ask_reserved_balance'] + orderbook_balances[1] - expected_balances[1]
+            self.coin_balance.set(str(float(quote_profit)))
+            self.base_balance.set(str(float(base_profit)))
+
         if "price" in data:
             px, py = data["price"]
             py = float(py)
@@ -405,19 +425,18 @@ class Graph(tk.Frame):
             ...
             ]
             '''
-
             for filled in data["filled_orders"]:
                 if "buy" == filled["type"]:
-                    self.coin_balance.set(str(float(self.coin_balance.get()) + float(filled["amount"])))
-                    self.base_balance.set(str(float(self.base_balance.get()) - (float(filled["amount"]) * float(filled["price"]))))
+                    # self.coin_balance.set(str(float(self.coin_balance.get()) + float(filled["amount"])))
+                    # self.base_balance.set(str(float(self.base_balance.get()) - (float(filled["amount"]) * float(filled["price"]))))
                     bx = self.date_as_object(filled["date"])  # date
                     by = float(filled["price"])
                     self.x_bought.append(bx)
                     self.y_bought.append(by)
 
                 elif "sell" == filled["type"]:
-                    self.coin_balance.set(str(float(self.coin_balance.get()) - float(filled["amount"])))
-                    self.base_balance.set(str(float(self.base_balance.get()) + (float(filled["amount"]) * float(filled["price"]))))
+                    # self.coin_balance.set(str(float(self.coin_balance.get()) - float(filled["amount"])))
+                    # self.base_balance.set(str(float(self.base_balance.get()) + (float(filled["amount"]) * float(filled["price"]))))
                     sx = self.date_as_object(filled["date"])  # date
                     sy = float(filled["price"])
                     self.x_sold.append(sx)

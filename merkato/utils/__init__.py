@@ -98,23 +98,25 @@ def get_relevant_exchange(exchange_name):
     return exchange_classes[exchange_name]
 
 
-def generate_complete_merkato_configs(merkato_tuples):
+def generate_complete_merkato_configs(merkato_objects):
     merkato_complete_configs = []
-    for tuple in merkato_tuples:
+    print('merkato_objects', merkato_objects)
+    for merkato in merkato_objects:
         complete_config = {}
         config = {"limit_only": True}
-        exchange = get_exchange_from_db(tuple[0])
+        exchange = get_exchange_from_db(merkato['exchange'])
         
-        config['exchange'] = tuple[0]
+        config['exchange'] = merkato['exchange']
         config['public_api_key'] = exchange['public_api_key']
         config['private_api_key'] = exchange['private_api_key']
 
         complete_config['configuration'] = config
-        complete_config['base'] = tuple[2]
-        complete_config['coin'] = tuple[3]
-        complete_config['spread'] = tuple[4]
-        complete_config['ask_reserved_balance'] = tuple[8]
-        complete_config['bid_reserved_balance'] = tuple[9]
+        complete_config['base'] = merkato['base']
+        complete_config['coin'] = merkato['alt']
+        complete_config['spread'] = merkato['spread']
+        complete_config['starting_price'] = merkato['starting_price']
+        complete_config['ask_reserved_balance'] = merkato['ask_reserved_balance']
+        complete_config['bid_reserved_balance'] = merkato['bid_reserved_balance']
         merkato_complete_configs.append(complete_config)
         print('complete_config', complete_config)
     return merkato_complete_configs

@@ -25,3 +25,4 @@ ONE_SATOSHI = 0.00000001
 ONE_BITCOIN = 1
 MARKET = 'market'
 TYPE = 'type'
+STARTING_PRICE = 'starting_price'
