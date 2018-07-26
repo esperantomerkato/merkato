@@ -24,7 +24,7 @@ def get_expected_balances(market_price, starting_price, start_base, start_quote,
             step_adjusted_factor = step**current_order
             current_ask_amount = start_quote/(scaling_factor * step_adjusted_factor)
             current_ask_price = starting_price*step_adjusted_factor
-            print('current_ask_price', current_ask_price)
+            # print('current_ask_price', current_ask_price)
             expected_base += current_ask_amount * current_ask_price
             expected_quote -= current_ask_amount
             if current_ask_price > market_price:
@@ -34,7 +34,7 @@ def get_expected_balances(market_price, starting_price, start_base, start_quote,
         while current_order < total_orders:
             step_adjusted_factor = step**current_order
             current_bid_price = starting_price/step_adjusted_factor
-            print('current_bid_price', current_bid_price)
+            # print('current_bid_price', current_bid_price)
             current_bid_amount = start_base/(scaling_factor * step_adjusted_factor)/current_bid_price
             expected_base -= current_bid_amount * current_bid_price
             expected_quote += current_bid_amount
@@ -55,7 +55,7 @@ def get_expected_balances(market_price, starting_price, start_base, start_quote,
             step_adjusted_factor = step**current_order
             current_ask_amount = start_quote/(scaling_factor * step_adjusted_factor)
             current_ask_price = starting_price*step_adjusted_factor
-            print('current_ask_price', current_ask_price)
+            # print('current_ask_price', current_ask_price)
             expected_base += current_ask_amount * current_ask_price
             expected_quote -= current_ask_amount
             if current_ask_price > market_price:
@@ -66,7 +66,7 @@ def get_expected_balances(market_price, starting_price, start_base, start_quote,
         while current_order < total_orders:
             step_adjusted_factor = step**current_order
             current_bid_price = starting_price/step_adjusted_factor
-            print('current_bid_price', current_bid_price)
+            # print('current_bid_price', current_bid_price)
             current_bid_amount = start_base/(scaling_factor * step_adjusted_factor)/current_bid_price
             expected_base -= current_bid_amount * current_bid_price
             expected_quote += current_bid_amount

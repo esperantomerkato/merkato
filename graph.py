@@ -50,6 +50,8 @@ class Graph(tk.Frame):
         self.base_balance = tk.StringVar()
         self.mean_price = tk.StringVar()
         self.performance = tk.StringVar()
+        self.base_vol = tk.StringVar()
+        self.quote_vol = tk.StringVar()
         self.coin_balance.set("0")
         self.base_balance.set("0")
         self.mean_price.set("0")
@@ -121,6 +123,11 @@ class Graph(tk.Frame):
         self.mean_price_lab2 = ttk.Label(self.stats_frame, textvariable=self.mean_price, style="app.TLabel")
         self.performance_lab = ttk.Label(self.stats_frame, text="\u0394 %:", style="app.TLabel")
         self.performance_lab2 = ttk.Label(self.stats_frame, textvariable=self.performance, style="app.TLabel")
+        self.base_vol_lab = ttk.Label(self.stats_frame, text="BVol:", style="app.TLabel")
+        self.base_vol_lab2 = ttk.Label(self.stats_frame, textvariable=self.base_vol, style="app.TLabel")
+        self.quote_vol_lab = ttk.Label(self.stats_frame, text="QVol:", style="app.TLabel")
+        self.quote_vol_lab2 = ttk.Label(self.stats_frame, textvariable=self.quote_vol, style="app.TLabel")
+
 
         self.profit_base.grid(row=1, column=0, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.profit_base2.grid(row=1, column=1, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
@@ -130,6 +137,10 @@ class Graph(tk.Frame):
         self.mean_price_lab2.grid(row=0, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.performance_lab.grid(row=1, column=2, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.performance_lab2.grid(row=1, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_lab.grid(row=0, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_lab2.grid(row=0, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_lab.grid(row=1, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_lab2.grid(row=1, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
 
         self.stats_frame.grid(row=0, column=2, rowspan=2, sticky=tk.NW, padx=(28.0), pady=(2,10))
         # --------------------------------------
@@ -394,21 +405,24 @@ class Graph(tk.Frame):
                 if v:
                     pprint(v[0])
         """
-        if len(self.y_price) > 0:
-            market_price = float(self.y_price[-1])
-            starting_price = data['starting_price']
-            start_base = data['bid_reserved_balance'] * 4
-            start_quote = data['ask_reserved_balance'] * 4
-            print("data['ask_reserved_balance']", data['ask_reserved_balance'], "data['bid_reserved_balance']", data['bid_reserved_balance'])
-            spread = data['spread']
-            expected_balances = get_expected_balances(market_price, starting_price, start_base, start_quote, spread, 1.0033 )
-            print('expected_balance', expected_balances)
-            orderbook_balances = get_orderbook_balances(data['open_orders'])
-            print('orderbook_balances', orderbook_balances)
-            base_profit = data['bid_reserved_balance'] + orderbook_balances[0] - expected_balances[0]
-            quote_profit = data['ask_reserved_balance'] + orderbook_balances[1] - expected_balances[1]
-            self.coin_balance.set(str(float(quote_profit)))
-            self.base_balance.set(str(float(base_profit)))
+        self.base_vol.set(str(float(data['base_volume'])))
+        self.quote_vol.set(str(float(data['quote_volume'])))
+        # BROKEN CODE FOR CALCUATING PROFIT WITH DOUG's OLD METHOD
+        # if len(self.y_price) > 0:
+        #     market_price = float(self.y_price[-1])
+        #     starting_price = data['starting_price']
+        #     start_base = data['bid_reserved_balance'] * 4
+        #     start_quote = data['ask_reserved_balance'] * 4
+        #     print("data['ask_reserved_balance']", data['ask_reserved_balance'], "data['bid_reserved_balance']", data['bid_reserved_balance'])
+        #     spread = data['spread']
+        #     expected_balances = get_expected_balances(market_price, starting_price, start_base, start_quote, spread, 1.0033 )
+        #     print('expected_balance', expected_balances)
+        #     orderbook_balances = get_orderbook_balances(data['open_orders'])
+        #     print('orderbook_balances', orderbook_balances)
+        #     base_profit = data['bid_reserved_balance'] + orderbook_balances[0] - expected_balances[0]
+        #     quote_profit = data['ask_reserved_balance'] + orderbook_balances[1] - expected_balances[1]
+        #     self.coin_balance.set(str(float(quote_profit)))
+        #     self.base_balance.set(str(float(base_profit)))
 
         if "price" in data:
             px, py = data["price"]
@@ -427,16 +441,16 @@ class Graph(tk.Frame):
             '''
             for filled in data["filled_orders"]:
                 if "buy" == filled["type"]:
-                    # self.coin_balance.set(str(float(self.coin_balance.get()) + float(filled["amount"])))
-                    # self.base_balance.set(str(float(self.base_balance.get()) - (float(filled["amount"]) * float(filled["price"]))))
+                    self.coin_balance.set(str(float(self.coin_balance.get()) + float(filled["amount"])))
+                    self.base_balance.set(str(float(self.base_balance.get()) - (float(filled["amount"]) * float(filled["price"]))))
                     bx = self.date_as_object(filled["date"])  # date
                     by = float(filled["price"])
                     self.x_bought.append(bx)
                     self.y_bought.append(by)
 
                 elif "sell" == filled["type"]:
-                    # self.coin_balance.set(str(float(self.coin_balance.get()) - float(filled["amount"])))
-                    # self.base_balance.set(str(float(self.base_balance.get()) + (float(filled["amount"]) * float(filled["price"]))))
+                    self.coin_balance.set(str(float(self.coin_balance.get()) - float(filled["amount"])))
+                    self.base_balance.set(str(float(self.base_balance.get()) + (float(filled["amount"]) * float(filled["price"]))))
                     sx = self.date_as_object(filled["date"])  # date
                     sy = float(filled["price"])
                     self.x_sold.append(sx)

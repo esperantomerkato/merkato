@@ -147,6 +147,8 @@ class Bot(ttk.Frame):
                     print('adding bid_reserved_balance')
                     context['ask_reserved_balance'] = float(self.bot.ask_reserved_balance)
                     context['bid_reserved_balance'] = float(self.bot.bid_reserved_balance)
+                    context['quote_volume'] = float(self.bot.quote_volume)
+                    context['base_volume'] = float(self.bot.base_volume)
                     context['spread'] = float(self.bot.spread)
             else:
                 context = self.graph.fake_data()

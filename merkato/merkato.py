@@ -8,7 +8,7 @@ import logging
 
 from decimal import *
 from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
-    ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE
+    ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, QUOTE_VOLUME, BASE_VOLUME
 from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, \
@@ -21,7 +21,7 @@ getcontext().prec = 8
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread,
                  bid_reserved_balance, ask_reserved_balance,
-                 user_interface=None, profit_margin=0, first_order='', starting_price=.018):
+                 user_interface=None, profit_margin=0, first_order='', starting_price=.018, quote_volume=0, base_volume=0):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
@@ -31,11 +31,12 @@ class Merkato(object):
         self.spread = Decimal(spread)
         self.profit_margin = Decimal(profit_margin)
         self.starting_price = starting_price
+        self.quote_volume = Decimal(quote_volume)
+        self.base_volume = Decimal(base_volume)
         # Exchanges have a maximum number of orders every user can place. Due
         # to this, every Merkato has a reserve of coins that are not currently
         # allocated. As the price approaches unallocated regions, the reserves
         # are deployed.
-        print('bid_reserved_balance', bid_reserved_balance,'ask_reserved_balance', ask_reserved_balance )
         self.bid_reserved_balance = Decimal(float(bid_reserved_balance))
         self.ask_reserved_balance = Decimal(float(ask_reserved_balance))
 
@@ -143,6 +144,8 @@ class Merkato(object):
                     market_orders.append((amount, buy_price, BUY,))
 
                 self.apply_filled_difference(tx, total_amount)
+                self.base_volume += total_amount * Decimal(float(price))
+                update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.base_volume))
 
             if tx[TYPE] == BUY:
                 sell_price = Decimal(price) * ( 1  + self.spread)
@@ -156,6 +159,8 @@ class Merkato(object):
                     market_orders.append((amount, sell_price, SELL,))
 
                 self.apply_filled_difference(tx, total_amount)
+                self.quote_volume += total_amount
+                update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
 
             if market != MARKET: 
                 log.info('market != MARKET')

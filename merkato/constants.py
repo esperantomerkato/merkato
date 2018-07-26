@@ -26,3 +26,5 @@ ONE_BITCOIN = 1
 MARKET = 'market'
 TYPE = 'type'
 STARTING_PRICE = 'starting_price'
+QUOTE_VOLUME = 'quote_volume'
+BASE_VOLUME = 'base_volume'
