@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import asyncio
 import json
 import websockets
@@ -9,11 +7,6 @@ from merkato.merkato import Merkato
 import logging
 log = logging.getLogger("server")
 
-wslog = logging.getLogger('websockets')
-wslog.setLevel(logging.INFO)
-wslog.addHandler(logging.StreamHandler())
-
-# TODO: Robust error-handling throughout
 # TODO: Translate incoming messages to Merkato method calls
 # TODO: Security: restrict origins to localhost?
 

@@ -22,13 +22,17 @@ async def client(url):
     async with websockets.connect(url) as ws:
         log.info("Connected.")
 
-        merkato_params = get_merkato_params_from_user()
-        log.info("Sending Merkato params {}".format(merkato_params))
-        await ws.send(json.dumps({'merkato_params': merkato_params}))
+        try:
+            merkato_params = get_merkato_params_from_user()
+            log.info("Sending Merkato params {}".format(merkato_params))
+            await ws.send(json.dumps({'merkato_params': merkato_params}))
 
-        while True:
-            msg = await ws.recv()
-            print("Received {}".format(msg))
+            while True:
+                msg = await ws.recv()
+                print("Received {}".format(msg))
+        except websockets.ConnectionClosed:
+            log.error("Server unexpectedly closed connection, investigate.")
+            exit(1)
 
 
 def get_merkato_params_from_user():
@@ -68,9 +72,9 @@ def get_merkato_params_from_user():
         'configuration': configuration,
         'base': base,
         'coin': coin,
-        'spread': spread,
-        'bid_reserved_balance': base_reserve,
-        'ask_reserved_balance': coin_reserve
+        'spread': float(spread),
+        'bid_reserved_balance': float(base_reserve),
+        'ask_reserved_balance': float(coin_reserve)
     }
 
 
