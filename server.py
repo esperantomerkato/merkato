@@ -1,31 +1,57 @@
+from datetime import datetime
+
 import asyncio
 import json
 import websockets
 
 from merkato.merkato import Merkato
 
-# TODO: Run initial config when the client connects
-# TODO: write simple ws client
+import logging
+log = logging.getLogger("server")
+
+# TODO: Robust error-handling throughout
+# TODO: Translate incoming messages to Merkato method calls
+# TODO: Security: restrict origins to localhost?
+
 
 class Server(object):
-    def __init__(self, *m_args, **m_kwargs):
-        self.merkato = Merkato(*m_args, **m_kwargs)
+    def __init__(self):
+        self.initialized = False
+        self.merkato = None
 
     async def _consume(self, ws, path):
         # Listen for incoming commands from client and translate them to method calls on Merkato.
         async for message in ws:
             data = json.loads(message)
+            log.info("Received data: {}".format(data))
 
     async def _produce(self, ws, path):
         # Run merkato.update() in a loop and send results to client for rendering.
         while True:
-            data = self.merkato.update()
-            msg = json.dumps(data)
-            await ws.send(msg)
+            if self.merkato:
+                data = self.merkato.update()
+                msg = json.dumps(data)
+                await ws.send(msg)
+            await asyncio.sleep(1.0)
+
+    async def on_connected(self, ws, path):
+        log.info("Connected.")
+
+        while True:
+            msg = await ws.recv()
+            msg = json.loads(msg)
+            if 'merkato_params' in msg:
+                merkato_params = msg['merkato_params']
+                log.info("Received Merkato params: {}".format(merkato_params))
+                self.merkato = Merkato(**merkato_params)
+                self.initialized = True
+                return
+            await asyncio.sleep(0.1)
 
     async def handler(self, ws, path):
         # Runs the consumer and producer concurrently.
-        # TODO: I think here is where we put on-connected logic.
+        await self.on_connected(ws, path)
+
         producer = asyncio.ensure_future(self._produce(ws, path))
         consumer = asyncio.ensure_future(self._consume(ws, path))
         done, pending = await asyncio.wait([producer, consumer])
