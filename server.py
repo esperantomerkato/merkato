@@ -9,6 +9,10 @@ from merkato.merkato import Merkato
 import logging
 log = logging.getLogger("server")
 
+wslog = logging.getLogger('websockets')
+wslog.setLevel(logging.INFO)
+wslog.addHandler(logging.StreamHandler())
+
 # TODO: Robust error-handling throughout
 # TODO: Translate incoming messages to Merkato method calls
 # TODO: Security: restrict origins to localhost?
@@ -45,18 +49,26 @@ class Server(object):
                 log.info("Received Merkato params: {}".format(merkato_params))
                 self.merkato = Merkato(**merkato_params)
                 self.initialized = True
-                return
+                log.info("===> Initialized Merkato")
+                break
             await asyncio.sleep(0.1)
 
     async def handler(self, ws, path):
         # Runs the consumer and producer concurrently.
-        await self.on_connected(ws, path)
+        try:
+            await self.on_connected(ws, path)
+            log.info("Finished connecting.")
 
-        producer = asyncio.ensure_future(self._produce(ws, path))
-        consumer = asyncio.ensure_future(self._consume(ws, path))
-        done, pending = await asyncio.wait([producer, consumer])
-        for task in pending:
-            task.cancel()
+            producer = asyncio.ensure_future(self._produce(ws, path))
+            consumer = asyncio.ensure_future(self._consume(ws, path))
+            done, pending = await asyncio.wait([producer, consumer])
+            for task in pending:
+                task.cancel()
+        except Exception as exc:
+            # the websockets library swallows exceptions. In development, we don't want that:
+            # if something breaks, we want to stop the server, and see a stack trace, so we can go fix it.
+            log.exception(exc)
+            exit(1)
 
     def serve(self, port=5678):
         return websockets.serve(self.handler, 'localhost', port)
