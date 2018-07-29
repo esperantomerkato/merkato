@@ -21,6 +21,12 @@ class Server(object):
         async for message in ws:
             data = json.loads(message)
             log.info("Received data: {}".format(data))
+            if 'call' in data:
+                name = data['call']
+                args = data['args']
+                rval = self.merkato.__dict__[name](*args)
+                rmsg = {'return': name, 'value': rval}
+                await ws.send(json.dumps(rmsg))
 
     async def _produce(self, ws, path):
         # Run merkato.update() in a loop and send results to client for rendering.
