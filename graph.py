@@ -137,10 +137,10 @@ class Graph(tk.Frame):
         self.mean_price_lab2.grid(row=0, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.performance_lab.grid(row=1, column=2, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.performance_lab2.grid(row=1, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.base_vol_lab.grid(row=0, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.base_vol_lab2.grid(row=0, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.quote_vol_lab.grid(row=1, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.quote_vol_lab2.grid(row=1, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_lab.grid(row=1, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_lab2.grid(row=1, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_lab.grid(row=0, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_lab2.grid(row=0, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
 
         self.stats_frame.grid(row=0, column=2, rowspan=2, sticky=tk.NW, padx=(28.0), pady=(2,10))
         # --------------------------------------
