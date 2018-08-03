@@ -15,3 +15,4 @@ tuxmy_merkato_tax_audit_logs.csv
 change_reserves.py
 get_orders.py
 profit.py
+output.log
