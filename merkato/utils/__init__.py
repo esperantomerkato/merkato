@@ -120,7 +120,6 @@ def generate_complete_merkato_configs(merkato_objects):
         complete_config['quote_volume'] = merkato['quote_volume']
         complete_config['base_volume'] = merkato['base_volume']
         merkato_complete_configs.append(complete_config)
-        print('complete_config', complete_config)
     return merkato_complete_configs
 
 
