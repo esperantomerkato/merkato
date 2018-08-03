@@ -360,8 +360,7 @@ class Merkato(object):
 
 
     def handle_market_order(self, amount, price, type):
-        log.info('handle market order')
-        update_merkato(self.mutex_UUID, LAST_ORDER, last_txid)
+        log.info('handle market order price: {}, amount: {}, type: {}'.format(price, amount, type))
         newest_tx_id = self.exchange.get_my_trade_history()[0][ID]
         if type == BUY:
             self.exchange.market_buy(amount, price)
@@ -382,6 +381,7 @@ class Merkato(object):
         price_numerator = Decimal(market_data['price_numerator'])
         last_txid    = market_data['last_txid']
         log.info('market data: {}'.format(market_data))
+        update_merkato(self.mutex_UUID, LAST_ORDER, last_txid)
 
         market_order_filled = amount == amount_executed
         if market_order_filled:
