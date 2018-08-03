@@ -146,6 +146,7 @@ class Merkato(object):
 
             self.apply_filled_difference(tx, total_amount)
             self.volumes[side] += total_amount * Decimal(float(price))      # todo is this supposed to differ for buy and sell??
+            key = 'base'
             update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.volumes[side]))
 
             if market != MARKET: 
