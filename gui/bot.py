@@ -5,8 +5,8 @@ from merkato.utils.database_utils import no_merkatos_table_exists, create_merkat
 from merkato.utils import generate_complete_merkato_configs
 
 import traceback
-from   graph import Graph
-from   my_widget import MyWidget
+from   gui.graph import Graph
+from   gui.my_widget import MyWidget
 import tkinter.messagebox as MessageBox
 
 import tkinter

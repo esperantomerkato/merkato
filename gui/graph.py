@@ -8,8 +8,8 @@ from matplotlib import style
 from matplotlib.lines import Line2D
 import datetime
 from pprint import pprint
-from   my_widget import MyWidget
-from gui_utils import get_expected_balances, get_orderbook_balances
+from   gui.my_widget import MyWidget
+from gui.gui_utils import get_expected_balances, get_orderbook_balances
 
 import tkinter.messagebox as MessageBox
 

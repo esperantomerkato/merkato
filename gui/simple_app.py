@@ -31,8 +31,8 @@ from collections import OrderedDict
 import random
 import time
 
-from  bot import Bot
-from app import App
+from  gui.bot import Bot
+from gui.app import App
 
 LARGE_FONT= ("Liberation Mono", 12)
 # print(style.available)

@@ -3,7 +3,7 @@ import tkinter
 import tkinter.ttk
 import tkinter as tk
 from collections import OrderedDict
-from bot import Bot
+from gui.bot import Bot
 
 import traceback
 import tkinter.messagebox as MessageBox
