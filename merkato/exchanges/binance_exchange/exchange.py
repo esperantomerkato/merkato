@@ -2,7 +2,7 @@ import json
 import requests
 import time
 from merkato.exchanges.exchange_base import ExchangeBase
-from merkato.constants import MARKET
+from merkato.constants import MARKET, BUY, SELL
 from binance.client import Client
 from binance.enums import *
 from math import floor
@@ -28,137 +28,62 @@ class BinanceExchange(ExchangeBase):
         self.ticker = coin + base
         self.name = 'bina'
 
-    def _sell(self, amount, ask):
-        ''' Places a sell for a number of an asset at the indicated price (0.00000503 for example)
-            :param amount: string
-            :param ask: float
-            :param ticker: string
-        '''
-        print('amount', amount, 'ask', ask)
+    def is_market_order(self, side, price):
+        assert side in (BUY, SELL), "Invalid side {}".format(side)
+        if side == BUY:
+            if Decimal(self.get_lowest_ask()) < price:
+                return True
+        elif side == SELL:
+            if Decimal(self.get_highest_bid()) > price:
+                return True
+        return False
+
+    def _order(self, side, amount, price):
+        log.info("Binance placing {} amount {} @{}".format(side, amount, price))
         amt_str = "{:0.0{}f}".format(amount, XMR_AMOUNT_PRECISION)
-        ask_str = "{:0.0{}f}".format(ask, XMR_PRICE_PRECISION)
-        log.info("Bina placing sell ask: {} amount: {}".format(ask_str, amt_str))
+        price_str = "{:0.0{}f}".format(price, XMR_PRICE_PRECISION)
+        side_const = SIDE_BUY if side == BUY else SIDE_SELL
         order = self.client.create_order(
             symbol=self.ticker,
-            side=SIDE_SELL,
+            side=side_const,
             type=ORDER_TYPE_LIMIT,
             timeInForce=TIME_IN_FORCE_GTC,
             quantity=amt_str,
-            price=ask_str,
-            recvWindow=10000000)
-
-        return order
-
-
-    def sell(self, amount, ask):
-        attempt = 0
-        while attempt < self.retries:
-            if self.limit_only:
-                # Get current highest bid on the orderbook
-                # If ask price is lower than the highest bid, return.
-
-                if Decimal(float(self.get_highest_bid())) > ask:
-                    log.info("SELL {} {} at {} on {} FAILED - would make a market order.".format(amount,self.ticker, ask, "binance"))
-                    return MARKET # Maybe needs failed or something
-
-            try:
-                success = self._sell(amount, ask)
-
-                if success:
-                    log.info("SELL {} {} at {} on {}".format(amount, self.ticker, ask, "binance"))
-                    return success
-
-                else:
-                    log.info("SELL {} {} at {} on {} FAILED - attempt {} of {}".format(amount, self.ticker, ask, "binance", attempt, self.retries))
-                    attempt += 1
-                    time.sleep(1)
-
-            except Exception as e:  # TODO - too broad exception handling
-                raise ValueError(e)
-
-
-    def _buy(self, amount, bid):
-        ''' Places a buy for a number of an asset at the indicated price (0.00000503 for example)
-            :param amount: string
-            :param bid: float
-            :param ticker: string
-        '''
-        amt_str = "{:0.0{}f}".format(amount, XMR_AMOUNT_PRECISION)
-        bid_str = "{:0.0{}f}".format(bid, XMR_PRICE_PRECISION)
-        info = self.client.get_symbol_info(symbol=self.ticker)
-        log.info("Bina placing buy bid: {} amount: {}".format(bid_str, amt_str))
-        order = self.client.create_order(
-            symbol=self.ticker,
-            side=SIDE_BUY,
-            type=ORDER_TYPE_LIMIT,
-            timeInForce=TIME_IN_FORCE_GTC,
-            quantity=amt_str,
-            price=bid_str,
+            price=price_str,
             recvWindow=10000000)
         return order
 
 
-    def buy(self, amount, bid):
+    def order(self, side, amount, price, limit_only=None):
+        if limit_only is None:
+            limit_only = self.limit_only
         attempt = 0
-        bid_amount = amount
         while attempt < self.retries:
-            if self.limit_only:
-                # Get current lowest ask on the orderbook
-                # If bid price is higher than the lowest ask, return.
-
-                if Decimal(float(self.get_lowest_ask())) < bid:
-
-                    log.info("BUY {} {} at {} on {} FAILED - would make a market order.".format(amount, self.ticker, bid, "binance"))
-                    return MARKET # Maybe needs failed or something
+            if limit_only and self.is_market_order(side, price):
+                log.info("SELL {} {} at {} on {} FAILED - would make a market order.".format(amount,self.ticker,
+                                                                                             price, "binance"))
+                return MARKET # Maybe needs failed or something
 
             try:
-                success = self._buy(bid_amount, bid)
+                success = self._order(side, amount, price)
+
                 if success:
-                    log.info("BUY {} {} at {} on {}".format(bid_amount, self.ticker, bid, "binance"))
+                    log.info("{} {} {} at {} on {}".format(side, amount, self.ticker, price, "binance"))
                     return success
 
                 else:
-                    log.info("BUY {} {} at {} on {} FAILED - attempt {} of {}".format(amount, self.ticker, bid, "binance", attempt, self.retries))
+                    log.info("{} {} {} at {} on {} FAILED - attempt {} of {}".format(side, amount, self.ticker, price,
+                                                                                     "binance", attempt, self.retries))
                     attempt += 1
                     time.sleep(1)
 
             except Exception as e:  # TODO - too broad exception handling
                 raise ValueError(e)
 
-    def market_buy(self, amount, bid):
-        attempt = 0
-        bid_amount = amount
-        while attempt < self.retries:
-            try:
-                success = self._buy(bid_amount, bid)
-                if success:
-                    log.info("BUY {} {} at {} on {}".format(bid_amount, self.ticker, bid, "binance"))
-                    return success
 
-                else:
-                    log.info("BUY {} {} at {} on {} FAILED - attempt {} of {}".format(amount, self.ticker, bid, "binance", attempt, self.retries))
-                    attempt += 1
-                    time.sleep(1)
+    def market_order(self, side, amount, price):
+        return self.order(side, amount, price, limit_only=False)
 
-            except Exception as e:  # TODO - too broad exception handling
-                raise ValueError(e)
-
-    def market_sell(self, amount, ask):
-        attempt = 0
-        try:
-            success = self._sell(amount, ask)
-
-            if success:
-                log.info("SELL {} {} at {} on {}".format(amount, self.ticker, ask, "binance"))
-                return success
-
-            else:
-                log.info("SELL {} {} at {} on {} FAILED - attempt {} of {}".format(amount, self.ticker, ask, "binance", attempt, self.retries))
-                attempt += 1
-                time.sleep(1)
-
-        except Exception as e:  # TODO - too broad exception handling
-            raise ValueError(e)
 
     def get_all_orders(self):
         ''' Returns all open orders for the ticker XYZ (not BTC_XYZ)

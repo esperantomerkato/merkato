@@ -42,32 +42,6 @@ class TuxExchange(ExchangeBase):
         return False
 
 
-    def order(self, side, amount, price):
-        attempt = 0
-        while attempt < self.retries:
-            if self.limit_only and self.is_market_order(side, price):
-                    log.info(
-                        "{} {} {} at {} on {} FAILED - would make a market order.".format(side, amount, self.ticker, price,
-                                                                                            "tux"))
-                    return MARKET  # Maybe needs failed or something
-
-            try:
-                success = self._order(side, amount, price)
-
-                if success:
-                    log.info("{} {} {} at {} on {}".format(side, amount, self.ticker, price, "tux"))
-                    return success
-
-                else:
-                    log.info("{} {} {} at {} on {} FAILED - attempt {} of {}".format(side, amount, self.ticker, price, "tux",
-                                                                                       attempt, self.retries))
-                    attempt += 1
-                    time.sleep(1)
-
-            except Exception as e:  # TODO - too broad exception handling
-                raise ValueError(e)
-
-
     def _order(self, side, amount, price):
         query_params = getQueryParameters(side, self.coin, amount, price)
         log.info(query_params)
@@ -75,15 +49,34 @@ class TuxExchange(ExchangeBase):
         log.info(response)
         return response['success']
 
+    def order(self, side, amount, price, limit_only=None):
+        if limit_only is None:
+            limit_only = self.limit_only
+        attempt = 0
+        while attempt < self.retries:
+            if limit_only and self.is_market_order(side, price):
+                log.info("SELL {} {} at {} on {} FAILED - would make a market order.".format(amount, self.ticker,
+                                                                                             price, "tux"))
+                return MARKET  # Maybe needs failed or something
+
+            try:
+                success = self._order(side, amount, price)
+
+                if success:
+                    log.info("{} {} {} at {} on {}".format(side, amount, self.ticker, price, "binance"))
+                    return success
+
+                else:
+                    log.info("{} {} {} at {} on {} FAILED - attempt {} of {}".format(side, amount, self.ticker, price,
+                                                                                     "tux", attempt, self.retries))
+                    attempt += 1
+                    time.sleep(1)
+
+            except Exception as e:  # TODO - too broad exception handling
+                raise ValueError(e)
 
     def market_order(self, side, amount, price):
-        ''' Amount is denominated in the quote asset
-        '''
-        _limit_only = self.limit_only
-        self.limit_only = False
-        rval = self.order(side, amount, price)
-        self.limit_only = _limit_only
-        return rval
+        return self.order(side, amount, price, limit_only=False)
 
 
     def get_all_orders(self):
