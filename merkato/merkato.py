@@ -17,6 +17,7 @@ from merkato.utils import create_price_data, validate_merkato_initialization, ge
 log = logging.getLogger(__name__)
 getcontext().prec = 8
 
+
 @log_all_methods
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread,
@@ -164,7 +165,10 @@ class Merkato(object):
             self.handle_market_order(*order)
 
         self.log_new_cointrackr_transactions(ordered_transactions)
-        log.info('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
+        log.info('ending partials base: {} quote: {}'.format(
+            self.partials_balances['base'],
+            self.partials_balances['quote'])
+        )
         return ordered_transactions
 
 
