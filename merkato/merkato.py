@@ -17,6 +17,7 @@ from merkato.utils import create_price_data, validate_merkato_initialization, ge
 log = logging.getLogger(__name__)
 getcontext().prec = 8
 
+
 @log_all_methods
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread,
@@ -31,18 +32,18 @@ class Merkato(object):
         self.spread = Decimal(spread)
         self.profit_margin = Decimal(profit_margin)
         self.starting_price = starting_price
-        self.quote_volume = Decimal(quote_volume)
-        self.base_volume = Decimal(base_volume)
+        self.volumes = {'base': Decimal(base_volume), 'quote': Decimal(quote_volume)}
         # Exchanges have a maximum number of orders every user can place. Due
         # to this, every Merkato has a reserve of coins that are not currently
         # allocated. As the price approaches unallocated regions, the reserves
         # are deployed.
-        self.bid_reserved_balance = Decimal(float(bid_reserved_balance))
-        self.ask_reserved_balance = Decimal(float(ask_reserved_balance))
+        self.reserved_balances = {
+            'ask': Decimal(float(ask_reserved_balance)),
+            'bid': Decimal(float(bid_reserved_balance))
+        }
 
         # The current sum of all partially filled orders
-        self.base_partials_balance = 0
-        self.quote_partials_balance = 0
+        self.partials_balances = {'base': 0, 'quote': 0}
 
         self.user_interface = user_interface
 
@@ -72,7 +73,7 @@ class Merkato(object):
                 log.debug('updating history first ID: {}'.format(history[0][ID]))
                 new_last_order = history[0][ID]
                 update_merkato(self.mutex_UUID, LAST_ORDER, new_last_order)
-            self.distribute_initial_orders(total_base=bid_reserved_balance, total_alt=ask_reserved_balance)
+            self.distribute_initial_orders(total_base=bid_reserved_balance, total_quote=ask_reserved_balance)
 
         else:
             first_order = get_first_order(self.mutex_UUID)
@@ -110,6 +111,7 @@ class Merkato(object):
             orderid = tx['orderId']
             tx_id   = tx[ID]
             price   = tx[PRICE]
+            side    = tx[TYPE]
 
             filled_amount = Decimal(tx['amount'])
             init_amount   = Decimal(tx['initamount'])
@@ -132,35 +134,20 @@ class Merkato(object):
                 self.handle_is_in_filled_orders(tx)
                 continue
 
-            if tx[TYPE] == SELL:
-                buy_price = Decimal(price) * ( 1  - self.spread)
-                log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
+            sign = 1 if side == BUY else -1
+            price = Decimal(price) * (1 + self.spread*sign)
+            log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, price, amount))
 
-                market = self.exchange.buy(amount, buy_price)
-                # A lock is probably needed somewhere near here in case of unexpected shutdowns
+            market = self.exchange.order(side, amount, price)
 
-                if market == MARKET:
-                    log.info('market buy {}'.format(market))
-                    market_orders.append((amount, buy_price, BUY,))
+            if market == MARKET:
+                log.info('market {} {}'.format(side, market))
+                market_orders.append((amount, price, side,))
 
-                self.apply_filled_difference(tx, total_amount)
-                self.base_volume += total_amount * Decimal(float(price))
-                update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.base_volume))
-
-            if tx[TYPE] == BUY:
-                sell_price = Decimal(price) * ( 1  + self.spread)
-
-                log.info("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
-
-                market = self.exchange.sell(amount, sell_price)
-                
-                if market == MARKET:
-                    log.info('market sell {}'.format(market))
-                    market_orders.append((amount, sell_price, SELL,))
-
-                self.apply_filled_difference(tx, total_amount)
-                self.quote_volume += total_amount
-                update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
+            self.apply_filled_difference(tx, total_amount)
+            self.volumes[side] += total_amount * Decimal(float(price))      # todo is this supposed to differ for buy and sell??
+            key = 'base'
+            update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.volumes[side]))
 
             if market != MARKET: 
                 log.info('market != MARKET')
@@ -178,7 +165,10 @@ class Merkato(object):
             self.handle_market_order(*order)
 
         self.log_new_cointrackr_transactions(ordered_transactions)
-        log.info('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
+        log.info('ending partials base: {} quote: {}'.format(
+            self.partials_balances['base'],
+            self.partials_balances['quote'])
+        )
         return ordered_transactions
 
 
@@ -197,10 +187,56 @@ class Merkato(object):
                 log.info('apply_filled_difference quote_partials_balance: {}'.format(self.quote_partials_balance))
 
 
-    def decaying_bid_ladder(self, total_amount, step, start_price):
-        '''total_amount is denominated in the base asset (BTC)
-        '''
-        # Abandon all hope, ye who enter here. This function uses black magic (math).
+    def distribute_initial_orders(self, total_base, total_quote, step=1.0033):
+        """
+        Called once on initialization to distribute base and quote balances in orders.
+        :param total_base:
+        :param total_quote:
+        :return:
+        """
+        current_price = (Decimal(self.exchange.get_highest_bid()) + Decimal(self.exchange.get_lowest_ask())) / 2
+        if self.user_interface:
+            current_price = Decimal(self.user_interface.confirm_price(current_price))
+            update_merkato(self.mutex_UUID, STARTING_PRICE, current_price)
+        ask_start = current_price + current_price * self.spread / 2
+        bid_start = current_price - current_price * self.spread / 2
+
+        self.distribute(BUY, bid_start, total_base, step)
+        self.distribute(SELL, ask_start, total_quote, step)
+
+
+    def distribute(self, side, price, total_to_distribute, step):
+        """
+        Allocates your market making balance on one side, in a way that will never be completely exhausted (run out).
+        :param side: merkato.constants.BUY or SELL
+        :param price: Starting price
+        :param total_to_distribute:
+        :param step:
+        :return:
+        """
+
+        # 2. Call decaying_bid_ladder on that start price, with the given step,
+        #    and half the total_to_distribute
+        self.decaying_ladder(side, Decimal(total_to_distribute/2), step, price)
+
+        # 3. Call decaying_bid_ladder again halving the
+        #    start_price, and halving the total_amount
+        self.decaying_ladder(side, Decimal(total_to_distribute/4), step, price/2)
+
+
+    def decaying_ladder(self, side, total_amount, step, start_price):
+        """
+        Places a ladder from the start_price to 2x the start_price.
+        The last order in the ladder is half the amount of the first
+        order in the ladder. The amount allocated at each step decays as
+        orders are placed.
+        Abandon all hope, ye who enter here. This function uses black magic (math).
+        :param side: merkato.constants.BUY or SELL
+        :param total_amount: Denominated in the base asset (e.g. BTC)
+        :param step:
+        :param start_price:
+        :return:
+        """
 
         scaling_factor = 0
         total_orders = floor(math.log(2, step)) # 277 for a step of 1.0025
@@ -214,20 +250,20 @@ class Merkato(object):
         current_order = 0
         amount = 0
 
-        prior_reserve = self.bid_reserved_balance
+        prior_reserve = self.reserved_balances[side]
         while current_order < total_orders:
             step_adjusted_factor = Decimal(step**current_order)
-            current_bid_price = Decimal(start_price/step_adjusted_factor)
-            current_bid_total = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))
-            current_bid_amount = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))/current_bid_price
-            amount += current_bid_amount
+            current_price = Decimal(start_price/step_adjusted_factor)
+            current_total = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))
+            current_amount = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))/current_price
+            amount += current_amount
             
             # TODO Create lock
-            response = self.exchange.buy(current_bid_amount, current_bid_price)
+            response = self.exchange.order(side, current_amount, current_price)
 
             log.info('bid response {}'.format(response))
 
-            self.remove_reserve(current_bid_total, BID_RESERVE) 
+            self.remove_reserve(current_total, BID_RESERVE)     # TODO make this side-agnostic
             # TODO Release lock
             
             current_order += 1
@@ -251,93 +287,12 @@ class Merkato(object):
         update_merkato(self.mutex_UUID, LAST_ORDER, tx_id)
 
 
-    def distribute_bids(self, price, total_to_distribute, step=1.0033):
-        # Allocates your market making balance on the bid side, in a way that
-        # will never be completely exhausted (run out).
-        # total_to_distribute is in the base currency (usually BTC)
-
-        # 2. Call decaying_bid_ladder on that start price, with the given step,
-        #    and half the total_to_distribute
-        self.decaying_bid_ladder(Decimal(total_to_distribute/2), step, price)
-
-        # 3. Call decaying_bid_ladder again halving the
-        #    start_price, and halving the total_amount
-        self.decaying_bid_ladder(Decimal(total_to_distribute/4), step, price/2)
-
-
     def get_total_amount(self, init_amount, orderid):
         if self.exchange.name == "tux":
             return Decimal(init_amount)
 
         else:
             return self.exchange.get_total_amount(orderid) # todo unimplemented on tux
-
-
-    def decaying_ask_ladder(self, total_amount, step, start_price):
-        # Places an ask ladder from the start_price to 2x the start_price.
-        # The last order in the ladder is half the amount of the first
-        # order in the ladder. The amount allocated at each step decays as
-        # orders are placed.
-        # Abandon all hope, ye who enter here. This function uses black magic (math).
-
-        scaling_factor = 0
-        total_orders = floor(math.log(2, step)) # 277 for a step of 1.0025
-        current_order = 0
-
-        # Calculate scaling factor
-        while current_order < total_orders:
-            scaling_factor += Decimal(1/(step**current_order))
-            current_order += 1
-
-        current_order = 0
-        amount = 0
-
-        prior_reserve = self.ask_reserved_balance
-        while current_order < total_orders:
-            step_adjusted_factor = Decimal(step**current_order)
-            current_ask_amount = total_amount/(scaling_factor * step_adjusted_factor)
-            current_ask_price = start_price*step_adjusted_factor
-            amount += current_ask_amount
-
-            # TODO Create lock
-            response = self.exchange.sell(current_ask_amount, current_ask_price)
-
-            log.info('ask response {}'.format(response))
-
-            self.remove_reserve(current_ask_amount, ASK_RESERVE) 
-            # TODO Release lock
-
-            current_order += 1
-            self.avoid_blocking()
-
-        log.info('allocated amount: {}'.format(prior_reserve - self.ask_reserved_balance))
-
-
-    def distribute_asks(self, price, total_to_distribute, step=1.0033):
-        # Allocates your market making balance on the ask side, in a way that
-        # will never be completely exhausted (run out).
-
-        # 2. Call decaying_ask_ladder on that start price, with the given step,
-        #    and half the total_to_distribute
-        self.decaying_ask_ladder(Decimal(total_to_distribute/2), step, price)
-
-        # 3. Call decaying_ask_ladder once more, doubling the
-        #    start_price, and halving the total_amount
-        self.decaying_ask_ladder(Decimal(total_to_distribute/4), step, price * 2)
-
-
-    def distribute_initial_orders(self, total_base, total_alt):
-        ''' TODO: Function comment
-        '''
-        current_price = (Decimal(self.exchange.get_highest_bid()) + Decimal(self.exchange.get_lowest_ask()))/2
-        if self.user_interface:
-            current_price = Decimal(self.user_interface.confirm_price(current_price))
-            update_merkato(self.mutex_UUID, STARTING_PRICE, current_price)
-        ask_start = current_price + current_price*self.spread/2
-        bid_start = current_price - current_price*self.spread/2
-        
-        self.distribute_bids(bid_start, total_base)
-        self.distribute_asks(ask_start, total_alt)
 
 
     def handle_partial_fill(self, type, filled_qty, tx_id):
