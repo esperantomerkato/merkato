@@ -9,7 +9,7 @@ from matplotlib.lines import Line2D
 import datetime
 from pprint import pprint
 from   gui.my_widget import MyWidget
-from gui.gui_utils import get_expected_balances, get_orderbook_balances
+from gui.gui_utils import get_expected_balances, get_orderbook_balances, get_unmade_orders
 
 import tkinter.messagebox as MessageBox
 
@@ -48,14 +48,16 @@ class Graph(tk.Frame):
         self.x_axis_window_size = 51  # todo: button for changing this
         self.coin_balance = tk.StringVar()
         self.base_balance = tk.StringVar()
-        self.mean_price = tk.StringVar()
-        self.performance = tk.StringVar()
         self.base_vol = tk.StringVar()
         self.quote_vol = tk.StringVar()
+        self.base_vol_profit = tk.StringVar()
+        self.quote_vol_profit = tk.StringVar()
         self.coin_balance.set("0")
         self.base_balance.set("0")
-        self.mean_price.set("0")
-        self.performance.set("0")
+        self.base_vol.set("0")
+        self.quote_vol.set("0")
+        self.base_vol_profit.set("0")
+        self.quote_vol_profit.set("0")
         self.orderbook = None
 
         #self.label = tk.Label(self, text=self.parent.pair, font=LARGE_FONT)
@@ -119,28 +121,27 @@ class Graph(tk.Frame):
         self.profit_base2 = ttk.Label(self.stats_frame, textvariable=self.base_balance, style="app.TLabel")
         self.profit_alt = ttk.Label(self.stats_frame, text="%s \u0394bal:" % self.parent.coin_title[:4], style="app.TLabel")
         self.profit_alt2 = ttk.Label(self.stats_frame, textvariable=self.coin_balance, style="app.TLabel")
-        self.mean_price_lab = ttk.Label(self.stats_frame, text="\u03BC price:", style="app.TLabel")
-        self.mean_price_lab2 = ttk.Label(self.stats_frame, textvariable=self.mean_price, style="app.TLabel")
-        self.performance_lab = ttk.Label(self.stats_frame, text="\u0394 %:", style="app.TLabel")
-        self.performance_lab2 = ttk.Label(self.stats_frame, textvariable=self.performance, style="app.TLabel")
         self.base_vol_lab = ttk.Label(self.stats_frame, text="BVol:", style="app.TLabel")
         self.base_vol_lab2 = ttk.Label(self.stats_frame, textvariable=self.base_vol, style="app.TLabel")
         self.quote_vol_lab = ttk.Label(self.stats_frame, text="QVol:", style="app.TLabel")
         self.quote_vol_lab2 = ttk.Label(self.stats_frame, textvariable=self.quote_vol, style="app.TLabel")
-
+        self.base_vol_profit_lab = ttk.Label(self.stats_frame, text="BProfit:", style="app.TLabel")
+        self.base_vol_profit_lab2 = ttk.Label(self.stats_frame, textvariable=self.base_vol_profit, style="app.TLabel")
+        self.quote_vol_profit_lab = ttk.Label(self.stats_frame, text="QProfit:", style="app.TLabel")
+        self.quote_vol_profit_lab2 = ttk.Label(self.stats_frame, textvariable=self.quote_vol_profit, style="app.TLabel")
 
         self.profit_base.grid(row=1, column=0, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.profit_base2.grid(row=1, column=1, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.profit_alt.grid(row=0, column=0, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
         self.profit_alt2.grid(row=0, column=1, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.mean_price_lab.grid(row=0, column=2, sticky=tk.NE, padx=(40, 5), pady=(5, 5))
-        self.mean_price_lab2.grid(row=0, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.performance_lab.grid(row=1, column=2, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.performance_lab2.grid(row=1, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.base_vol_lab.grid(row=1, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.base_vol_lab2.grid(row=1, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.quote_vol_lab.grid(row=0, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
-        self.quote_vol_lab2.grid(row=0, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_lab.grid(row=1, column=2, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_lab2.grid(row=1, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_lab.grid(row=0, column=2, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_lab2.grid(row=0, column=3, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_profit_lab.grid(row=1, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.base_vol_profit_lab2.grid(row=1, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_profit_lab.grid(row=0, column=4, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
+        self.quote_vol_profit_lab2.grid(row=0, column=5, sticky=tk.NE, padx=(10, 5), pady=(5, 5))
 
         self.stats_frame.grid(row=0, column=2, rowspan=2, sticky=tk.NW, padx=(28.0), pady=(2,10))
         # --------------------------------------
@@ -257,56 +258,6 @@ class Graph(tk.Frame):
         zero_scenario = coin_cumulative == 0 and base_cumulative == 0
         free_money_scenario = (coin_cumulative >= 0 and base_cumulative > 0) or (coin_cumulative > 0 and base_cumulative >= 0)
         
-        try:
-            mean_price = abs(base_cumulative / coin_cumulative)
-            
-        except ZeroDivisionError as e:
-            mean_price = "N/A"
-            
-        except Exception as e:
-            #MessageBox.showerror("calc_stats error", str(e))
-            raise
-        
-        else:
-            price_actual = float(self.y_price[-1])
-            diff = (abs(mean_price - price_actual) / price_actual) * 100
-
-        if free_money_scenario:
-            performance = "inf"
-            performance_string = "inf"
-
-        elif buying_scenario:
-            if price_actual >= mean_price:
-                performance = diff
-                
-            else:
-                performance = -1 * diff
-                
-        elif selling_scenario:
-            if price_actual <= mean_price:
-                performance = diff
-                
-            else:
-                performance = -1 * diff
-                
-        elif zero_scenario:
-            performance = 0.0
-        
-        else:
-            åperformance = 0.0
-
-        if type(performance) == float:
-            performance_string = "{0:.3f}".format(performance)
-
-        if type(mean_price) == float:
-            mean_price_string = "{0:.5g}".format(mean_price)
-            
-        else:
-            mean_price_string = mean_price
-
-        self.mean_price.set(mean_price_string)
-        self.performance.set(performance_string)
-
 
     def fake_data(self):
         print("------------- faking data ------------")
@@ -407,6 +358,12 @@ class Graph(tk.Frame):
         """
         self.base_vol.set(str(float(data['base_volume'])))
         self.quote_vol.set(str(float(data['quote_volume'])))
+        unmade_orders = get_unmade_orders(data['price'][1], data['starting_price'], data['starting_base'], data['starting_quote'], data['spread'], data['step'])
+        base_vol_profit = str((float(data['base_volume']) - unmade_orders['base']) * data['spread'])
+        quote_vol_profit = str((float(data['quote_volume']) - unmade_orders['quote']) * data['spread'] )
+        self.base_vol_profit.set(str(float(base_vol_profit)))
+        self.quote_vol_profit.set(str(float(quote_vol_profit)))
+
         # BROKEN CODE FOR CALCUATING PROFIT WITH DOUG's OLD METHOD
         # if len(self.y_price) > 0:
         #     market_price = float(self.y_price[-1])

@@ -33,6 +33,7 @@ class Merkato(object):
         self.starting_price = starting_price
         self.quote_volume = Decimal(quote_volume)
         self.base_volume = Decimal(base_volume)
+        self.step = 1.0033
         # Exchanges have a maximum number of orders every user can place. Due
         # to this, every Merkato has a reserve of coins that are not currently
         # allocated. As the price approaches unallocated regions, the reserves
@@ -251,7 +252,7 @@ class Merkato(object):
         update_merkato(self.mutex_UUID, LAST_ORDER, tx_id)
 
 
-    def distribute_bids(self, price, total_to_distribute, step=1.0033):
+    def distribute_bids(self, price, total_to_distribute):
         # Allocates your market making balance on the bid side, in a way that
         # will never be completely exhausted (run out).
         # total_to_distribute is in the base currency (usually BTC)
@@ -313,17 +314,17 @@ class Merkato(object):
         log.info('allocated amount: {}'.format(prior_reserve - self.ask_reserved_balance))
 
 
-    def distribute_asks(self, price, total_to_distribute, step=1.0033):
+    def distribute_asks(self, price, total_to_distribute):
         # Allocates your market making balance on the ask side, in a way that
         # will never be completely exhausted (run out).
 
         # 2. Call decaying_ask_ladder on that start price, with the given step,
         #    and half the total_to_distribute
-        self.decaying_ask_ladder(Decimal(total_to_distribute/2), step, price)
+        self.decaying_ask_ladder(Decimal(total_to_distribute/2), self.step, price)
 
         # 3. Call decaying_ask_ladder once more, doubling the
         #    start_price, and halving the total_amount
-        self.decaying_ask_ladder(Decimal(total_to_distribute/4), step, price * 2)
+        self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price * 2)
 
 
     def distribute_initial_orders(self, total_base, total_alt):
@@ -413,7 +414,11 @@ class Merkato(object):
                 "open_orders": self.exchange.get_my_open_orders(context_formatted=True),
                 "balances": self.exchange.get_balances(),
                 "orderbook": self.exchange.get_all_orders(),
-                "starting_price": self.starting_price
+                "starting_price": self.starting_price,
+                "starting_base": self.bid_reserved_balance * 4,
+                "starting_quote": self.ask_reserved_balance * 4,
+                "spread": self.spread,
+                "step": self.step
                 }
         
         return context
@@ -449,7 +454,11 @@ class Merkato(object):
                    "open_orders": self.exchange.get_my_open_orders(context_formatted=True),
                    "balances": self.exchange.get_balances(),
                    "orderbook": self.exchange.get_all_orders(),
-                   "starting_price": self.starting_price
+                   "starting_price": self.starting_price,
+                   "starting_base": self.bid_reserved_balance * 4,
+                   "starting_quote": self.ask_reserved_balance * 4,
+                   "spread": self.spread,
+                   "step": self.step
                    }
         
         return context
