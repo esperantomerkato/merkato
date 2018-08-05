@@ -1,6 +1,7 @@
 import unittest
 from mock import patch, MagicMock
 
+from merkato.constants import BUY, SELL
 from merkato.merkato import Merkato
 
 
@@ -22,12 +23,12 @@ class MerkatoTestCase(unittest.TestCase):
         self.merkato.exchange.sell.assert_not_called()
 
     def test_rebalance_orders(self):
-        pass
+        fake_new_txes = [
+            # todo make some fake transactions here
+            {'orderId': 0, 'id': 0, 'price': 0, 'type': BUY},
+        ]
 
-    def test_create_bid_ladder(self):
-        pass
-
-    def test_create_ask_ladder(self):
+    def test_decaying_ladder(self):
         pass
 
     def test_merge_orders(self):
