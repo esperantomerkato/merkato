@@ -2,7 +2,7 @@ import logging
 from merkato.exchanges.test_exchange.exchange import TestExchange
 from merkato.exchanges.tux_exchange.exchange import TuxExchange
 from merkato.exchanges.binance_exchange.exchange import BinanceExchange
-from merkato.constants import known_exchanges
+from merkato.constants import known_exchanges, known_assets
 from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato
 import base64
 import time
@@ -65,14 +65,54 @@ def get_exchange():
         return get_exchange()
     return selection
 
+def get_asset(type):
+    print("Which asset should be the {}?".format('type'))
+    print("1 -> BTC")
+    print("2 -> XMR")
+    print("3 -> ETH")
+    print("4 -> USDT")
+    print("5 -> PEPECASH")
+    selection = input("Selection: ")
+    if selection not in known_assets:
+        print('selected exchange not supported, try again')
+        return get_asset()
+    return selection
+
+def get_reserve_balance(type):
+    print("What quantity of the {} should be used?".format('type'))
+    print('MUST BE A NUMBER')
+    selection = float(input("Selection: "))
+    return selection
+
+def get_spread():
+    print("What spread should be used?")
+    print('MUST BE A NUMBER')
+    selection = float(input("Selection: "))
+    return selection
+
+def get_profit_margin():
+    print("What profit margin should be used?")
+    print('MUST BE A NUMBER')
+    selection = float(input("Selection: "))
+    return selection
+
 
 def get_config_selection():
     print("Please make a selection:")
-    print("1 -> Create new configuration")
-    print("2 -> Load existing configuration")
+    print("1 -> Add new exchange")
+    print("2 -> Load existing merkato")
     print("3 -> Exit")
     return input("Selection: ")
 
+
+def get_start_option():
+    print("Welcome to Esperanto Merkato! What would you like to do?")
+    print("1 -> Run Merkatos")
+    print("2 -> Add exchange")
+    print("3 -> Add merkato (Requires existing exchanges)")
+    print("4 -> Drop tables")
+    print("5 -> Exit")
+    return input("Selection: ")
 
 def create_price_data(orders, order):
     price_data             = {}
@@ -100,7 +140,6 @@ def get_relevant_exchange(exchange_name):
 
 def generate_complete_merkato_configs(merkato_objects):
     merkato_complete_configs = []
-    print('merkato_objects', merkato_objects)
     for merkato in merkato_objects:
         complete_config = {}
         config = {"limit_only": True}

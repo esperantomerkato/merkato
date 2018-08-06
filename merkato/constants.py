@@ -13,6 +13,13 @@ known_exchanges = {
     'test': 'test',
     'bina': 'bina'
 }
+known_assets = {
+    'XMR': 'XMR',
+    'BTC': 'BTC',
+    'PEPECASH': 'PEPECASH',
+    'USDT': 'USDT',
+    'ETH': 'ETH'
+}
 implemented_exchanges = ["tux", "test"]
 LAST_ORDER = 'last_order'
 FIRST_ORDER = 'first_order'

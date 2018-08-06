@@ -9,7 +9,7 @@ from matplotlib.lines import Line2D
 import datetime
 from pprint import pprint
 from   gui.my_widget import MyWidget
-from gui.gui_utils import get_expected_balances, get_orderbook_balances, get_unmade_orders
+from gui.gui_utils import get_expected_balances, get_orderbook_balances, get_unmade_volume
 
 import tkinter.messagebox as MessageBox
 
@@ -358,7 +358,7 @@ class Graph(tk.Frame):
         """
         self.base_vol.set(str(float(data['base_volume'])))
         self.quote_vol.set(str(float(data['quote_volume'])))
-        unmade_orders = get_unmade_orders(data['price'][1], data['starting_price'], data['starting_base'], data['starting_quote'], data['spread'], data['step'])
+        unmade_orders = get_unmade_volume(data['price'][1], data['starting_price'], data['starting_base'], data['starting_quote'], data['spread'], data['step'])
         base_vol_profit = str((float(data['base_volume']) - unmade_orders['base']) * data['spread'])
         quote_vol_profit = str((float(data['quote_volume']) - unmade_orders['quote']) * data['spread'] )
         self.base_vol_profit.set(str(float(base_vol_profit)))

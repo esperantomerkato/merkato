@@ -89,7 +89,7 @@ def get_orderbook_balances(current_orders):
             base_sum += float(current_amount) * float(order_price)
     return (float(base_sum), float(quote_sum))
 
-def get_unmade_orders(market_price, starting_price, start_base, start_quote, spread, step):
+def get_unmade_volume(market_price, starting_price, start_base, start_quote, spread, step):
   scaling_factor = 0
   total_orders = floor(math.log(2, step)) # 277 for a step of 1.0025
   current_order = 0
