@@ -13,16 +13,16 @@ def main():
 
     if no_merkatos_table_exists():
         create_merkatos_table()
-	if no_exchanges_table_exists():
-		create_exchanges_table()
+    if no_exchanges_table_exists():
+        create_exchanges_table()
 
     option = get_start_option()
     process_result = process_start_option(option)
 
     if process_result == False:
         return
-    elif process_result == True:
-        start_merkatos()
+    elif process_result != None:
+        start_merkatos(process_result)
     else:
         main()
 

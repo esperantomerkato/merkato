@@ -2,12 +2,14 @@
 
 import json
 import os.path
-from merkato.utils.database_utils import get_exchange,insert_exchange, no_exchanges_table_exists, create_exchanges_table, create_merkatos_table, create_exchanges_table, drop_merkatos_table, drop_exchanges_table, get_exchange as get_exchange_from_db
-from merkato.exchanges.tux_exchange.utils import validate_credentials, get_all_merkatos
+from merkato.utils.database_utils import get_exchange,insert_exchange, no_exchanges_table_exists, create_exchanges_table, create_merkatos_table, create_exchanges_table, drop_merkatos_table, drop_exchanges_table, get_exchange as get_exchange_from_db, get_all_merkatos
+from merkato.exchanges.tux_exchange.utils import validate_credentials
 from merkato.exchanges.binance_exchange.utils import validate_keys
 from merkato.constants import EXCHANGE
-from merkato.utils import update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs
+from merkato.merkato import Merkato
+from merkato.utils import update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable
 import getpass
+import time
 
 def load_config(exchange_name=None):
     # Loads an existing configuration file
@@ -156,7 +158,7 @@ def get_config():
             # decrypt_passwords(config)
             return config
 
-        elif selection == '3'
+        elif selection == '3':
             return {}
 
         elif selection == '4':
@@ -169,23 +171,23 @@ def get_config():
 
 def process_start_option(option):
     while True:
-        if selection =='1':
+        if option =='1':
             start_merkatos()
 
-        elif selection == '2':
+        elif option == '2':
             create_exchange()
             return 
 
-        elif selection == '3'
-            create_new_merkato()
-            return True
+        elif option == '3':
+            password = create_new_merkato()
+            return password
 
-        elif selection == '4':
+        elif option == '4':
             handle_drop_selection()
             return
 
-        elif selection == '5':
-            return
+        elif option == '5':
+            return False
 
         else:
             return False
@@ -202,8 +204,9 @@ def handle_drop_selection():
         create_exchanges_table()
     
 
-def start_merkatos():
-    password = getpass.getpass()
+def start_merkatos(password=None):
+    if password == None:
+        password = getpass.getpass()
     merkatos = get_all_merkatos()
     complete_merkato_configs = generate_complete_merkato_configs(merkatos)
 
@@ -215,8 +218,9 @@ def start_merkatos():
         initialized_merkatos.append(merkato)
 
     while True:
-        for merkato in initialized_merkatos
+        for merkato in initialized_merkatos:
             merkato.update()
+        time.sleep(2)
 
 def create_new_merkato():
     password = getpass.getpass()
@@ -229,7 +233,8 @@ def create_new_merkato():
     merkato_args['base'] = get_asset('base')
     merkato_args['ask_reserved_balance'] = get_reserve_balance('quote')
     merkato_args['bid_reserved_balance'] = get_reserve_balance('base')
-    merkato_args['spread'] = get_spread()
-    merkato_args['profit_margin'] = get_profit_margin()
-
+    merkato_args['spread'] = get_merkato_variable('spread')
+    merkato_args['profit_margin'] = get_merkato_variable('profit margin')
+    merkato_args['step'] = get_merkato_variable('step')
     Merkato(**merkato_args)
+    return password

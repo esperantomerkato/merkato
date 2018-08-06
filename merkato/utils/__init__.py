@@ -6,6 +6,7 @@ from merkato.constants import known_exchanges, known_assets
 from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato
 import base64
 import time
+import getpass
 
 from decimal import *
 from cryptography.fernet import Fernet
@@ -46,8 +47,8 @@ def decrypt(password, source):
 
 def update_config_with_credentials(config):
     print("API Credentials needed")
-    public_key  = input("Public Key: ")
-    private_key = input("Private Key: ")
+    public_key  = getpass.getpass("Public Key: ")
+    private_key = getpass.getpass("Private Key: ")
     config['public_api_key'] = public_key
     config['private_api_key'] = private_key
 
@@ -66,7 +67,7 @@ def get_exchange():
     return selection
 
 def get_asset(type):
-    print("Which asset should be the {}?".format('type'))
+    print("Which asset should be the {}?".format(type))
     print("1 -> BTC")
     print("2 -> XMR")
     print("3 -> ETH")
@@ -79,19 +80,13 @@ def get_asset(type):
     return selection
 
 def get_reserve_balance(type):
-    print("What quantity of the {} should be used?".format('type'))
+    print("What quantity of the {} should be used?".format(type))
     print('MUST BE A NUMBER')
     selection = float(input("Selection: "))
     return selection
 
-def get_spread():
-    print("What spread should be used?")
-    print('MUST BE A NUMBER')
-    selection = float(input("Selection: "))
-    return selection
-
-def get_profit_margin():
-    print("What profit margin should be used?")
+def get_merkato_variable(type):
+    print("What {} should be used?".format(type))
     print('MUST BE A NUMBER')
     selection = float(input("Selection: "))
     return selection
@@ -265,6 +260,3 @@ def log_all_methods(cls):
         if callable(attr):
             setattr(cls, name, log_on_call(attr))
     return cls
-
-
-

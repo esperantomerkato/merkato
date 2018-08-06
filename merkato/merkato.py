@@ -21,7 +21,7 @@ getcontext().prec = 8
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread,
                  bid_reserved_balance, ask_reserved_balance,
-                 user_interface=None, profit_margin=0, first_order='', starting_price=.018, quote_volume=0, base_volume=0):
+                 user_interface=None, profit_margin=0, first_order='', starting_price=.018, quote_volume=0, base_volume=0, step=1.0033):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
@@ -33,7 +33,7 @@ class Merkato(object):
         self.starting_price = starting_price
         self.quote_volume = Decimal(quote_volume)
         self.base_volume = Decimal(base_volume)
-        self.step = 1.0033
+        self.step = step
         # Exchanges have a maximum number of orders every user can place. Due
         # to this, every Merkato has a reserve of coins that are not currently
         # allocated. As the price approaches unallocated regions, the reserves
@@ -259,11 +259,11 @@ class Merkato(object):
 
         # 2. Call decaying_bid_ladder on that start price, with the given step,
         #    and half the total_to_distribute
-        self.decaying_bid_ladder(Decimal(total_to_distribute/2), step, price)
+        self.decaying_bid_ladder(Decimal(total_to_distribute/2), self.step, price)
 
         # 3. Call decaying_bid_ladder again halving the
         #    start_price, and halving the total_amount
-        self.decaying_bid_ladder(Decimal(total_to_distribute/4), step, price/2)
+        self.decaying_bid_ladder(Decimal(total_to_distribute/4), self.step, price/2)
 
 
     def get_total_amount(self, init_amount, orderid):
@@ -333,7 +333,8 @@ class Merkato(object):
         current_price = (Decimal(self.exchange.get_highest_bid()) + Decimal(self.exchange.get_lowest_ask()))/2
         if self.user_interface:
             current_price = Decimal(self.user_interface.confirm_price(current_price))
-            update_merkato(self.mutex_UUID, STARTING_PRICE, current_price)
+        update_merkato(self.mutex_UUID, STARTING_PRICE, float(current_price))
+
         ask_start = current_price + current_price*self.spread/2
         bid_start = current_price - current_price*self.spread/2
         

@@ -39,7 +39,7 @@ def main():
 
         print('STATS FOR {}'.format(merkato['exchange_pair']))
         print('Quote Volume: {} Base Volume: {}'.format(quote_volume, base_volume))
-        print('Quote Profit: {} Base Profit: {}'.format(base_profit, quote_profit))
+        print('Quote Profit: {} Base Profit: {}'.format(quote_profit, base_profit))
 
 if __name__ == '__main__':
     main()
