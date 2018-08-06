@@ -40,7 +40,9 @@ def main():
         print('STATS FOR {}'.format(merkato['exchange_pair']))
         print('Quote Volume: {} Base Volume: {}'.format(quote_volume, base_volume))
         print('Quote Profit: {} Base Profit: {}'.format(quote_profit, base_profit))
-        print('Relative Quote Profit: {} Relative Base Profit: {}'.format(quote_profit/initial_quote, base_profit/initial_base))
+        relative_base_prof = str((base_profit/initial_base) * 100) + '%'
+        relative_quote_prof = str((quote_profit/initial_quote ) * 100) + '%'
+        print('Relative Quote Profit: {} Relative Base Profit: {}'.format(relative_quote_prof, relative_base_prof))
 
 if __name__ == '__main__':
     main()
