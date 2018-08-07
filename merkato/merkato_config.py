@@ -220,7 +220,7 @@ def start_merkatos(password=None):
     while True:
         for merkato in initialized_merkatos:
             merkato.update()
-        time.sleep(2)
+        time.sleep(6)
 
 def create_new_merkato():
     password = getpass.getpass()
