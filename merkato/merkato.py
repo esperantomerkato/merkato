@@ -393,10 +393,10 @@ class Merkato(object):
         market_order_filled = amount == amount_executed
         if market_order_filled:
             if type_to_place == BUY:
-                price = price * Decimal(1 - self.spread)
+                price = price * Decimal(1 + self.spread)
                 self.exchange.sell(amount_executed, price) # Should never market order
             elif type_to_place == SELL:
-                price = price * Decimal(1 + self.spread)
+                price = price * Decimal(1 - self.spread)
                 self.exchange.buy(amount_executed, price)
         else:
             log.info('handle_market_order: partials affected, amount: {} amount_executed: {}'.format(amount, amount_executed))
