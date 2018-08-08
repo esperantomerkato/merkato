@@ -141,8 +141,8 @@ class Merkato(object):
                 # A lock is probably needed somewhere near here in case of unexpected shutdowns
 
                 if market == MARKET:
-                    log.info('market buy {}'.format(market))
-                    market_orders.append((amount, buy_price, BUY,))
+                    log.info('MARKET ORDER buy {}'.format(market))
+                    market_orders.append((amount, buy_price, BUY, tx_id,))
 
                 self.apply_filled_difference(tx, total_amount)
                 self.base_volume += total_amount * Decimal(float(price))
@@ -156,15 +156,15 @@ class Merkato(object):
                 market = self.exchange.sell(amount, sell_price)
                 
                 if market == MARKET:
-                    log.info('market sell {}'.format(market))
-                    market_orders.append((amount, sell_price, SELL,))
+                    log.info('MARKET ORDER sell {}'.format(market))
+                    market_orders.append((amount, sell_price, SELL, tx_id))
 
                 self.apply_filled_difference(tx, total_amount)
                 self.quote_volume += total_amount
                 update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
 
             if market != MARKET: 
-                log.info('market != MARKET')
+                log.info('NOT MARKET ORDER')
                 update_merkato(self.mutex_UUID, LAST_ORDER, tx[ID])
 
             filled_orders.append(orderid)
@@ -361,18 +361,23 @@ class Merkato(object):
         # 2. update the last order
 
 
-    def handle_market_order(self, amount, price, type):
-        log.info('handle market order price: {}, amount: {}, type: {}'.format(price, amount, type))
-        newest_tx_id = self.exchange.get_my_trade_history()[0][ID]
-        if type == BUY:
+    def handle_market_order(self, amount, price, type_to_place, tx_id):
+        log.info('handle market order price: {}, amount: {}, type_to_place: {}'.format(price, amount, type_to_place))
+        
+        last_id_before_market = get_last_order(self.mutex_UUID)
+
+        if type_to_place == BUY:
             self.exchange.market_buy(amount, price)
 
-        elif type == SELL:
+        elif type_to_place == SELL:
             self.exchange.market_sell(amount, price)        
-
+                
         current_history = self.exchange.get_my_trade_history()
-        market_history  = get_new_history(current_history, newest_tx_id)
+        if self.exchange.name != 'tux':
+            self.exchange.process_new_transactions(current_history)
+        market_history  = get_new_history(current_history, last_id_before_market)
         market_data     = get_market_results(market_history)
+
 
         # The sell gave us some BTC. The buy is executed with that BTC.
         # The market buy will get us X xmr in return. All of that xmr
@@ -387,11 +392,15 @@ class Merkato(object):
 
         market_order_filled = amount == amount_executed
         if market_order_filled:
-            self.exchange.sell(amount_executed, price) # Should never market order
-        
+            if type_to_place == BUY:
+                price = price * Decimal(1 - self.spread)
+                self.exchange.sell(amount_executed, price) # Should never market order
+            elif type_to_place == SELL:
+                price = price * Decimal(1 + self.spread)
+                self.exchange.buy(amount_executed, price)
         else:
             log.info('handle_market_order: partials affected, amount: {} amount_executed: {}'.format(amount, amount_executed))
-            if type == BUY:
+            if type_to_place == BUY:
                 self.quote_partials_balance += amount_executed
                 update_merkato(self.mutex_UUID, 'quote_partials_balance', float(self.quote_partials_balance))
                 log.info('market buy partials after: {}'.format(self.quote_partials_balance))
