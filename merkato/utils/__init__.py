@@ -106,7 +106,8 @@ def get_start_option():
     print("2 -> Add exchange")
     print("3 -> Add merkato (Requires existing exchanges)")
     print("4 -> Drop tables")
-    print("5 -> Exit")
+    print("5 -> Add asset to a Merkato")
+    print("6 -> Exit")
     return input("Selection: ")
 
 def create_price_data(orders, order):

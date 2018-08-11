@@ -187,6 +187,10 @@ def process_start_option(option):
             return
 
         elif option == '5':
+            handle_add_asset()
+            return
+
+        elif option == '6':
             return False
 
         else:
@@ -202,7 +206,35 @@ def handle_drop_selection():
     if should_drop_exchanges == 'y':
         drop_exchanges_table()
         create_exchanges_table()
-    
+
+def handle_add_asset():
+    merkatos = get_all_merkatos()
+    complete_merkato_configs = generate_complete_merkato_configs(merkatos)
+
+    print('Select Merkato from available IDs')
+    for counter, complete_config in enumerate(complete_merkato_configs):
+        exchange_name = complete_config['configuration']['exchange'] + '_' + complete_config['base'] + '_' + complete_config['coin']
+        print('{} -> {}'.format(counter + 1,  exchange_name))
+    selection = input('Selection: ')
+    num_selection = int(selection) - 1
+    selection_exists = len(complete_merkato_configs) > num_selection + 1
+
+    if selection_exists:
+        complete_config = complete_merkato_configs[num_selection]
+        asset_to_add = input('Do you want to add to {} or {}: '.format(complete_config['coin'], complete_config['base']))
+        while asset_to_add != complete_config['coin'] and complete_config['base']:
+            print('Wrong Asset, try again')
+            asset_to_add = input('Do you want to add to {} or {}: '.format(complete_config['coin'], complete_config['base']))
+
+        amount_to_add = input('How much {} do you want to add: '.format(asset_to_add))
+
+        password = getpass.getpass('Input selection for merkato: ')
+        decrypt_keys(config=complete_config['configuration'], password=password)
+        merkato = Merkato(**complete_config)
+        merkato.update_orders(asset_to_add, amount_to_add)
+    else:
+        handle_add_asset()
+
 
 def start_merkatos(password=None):
     if password == None:
