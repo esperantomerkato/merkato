@@ -222,7 +222,7 @@ def handle_add_asset():
     if selection_exists:
         complete_config = complete_merkato_configs[num_selection]
         asset_to_add = input('Do you want to add to {} or {}: '.format(complete_config['coin'], complete_config['base']))
-        while asset_to_add != complete_config['coin'] and complete_config['base']:
+        while asset_to_add != complete_config['coin'] and asset_to_add != complete_config['base']:
             print('Wrong Asset, try again')
             asset_to_add = input('Do you want to add to {} or {}: '.format(complete_config['coin'], complete_config['base']))
 
