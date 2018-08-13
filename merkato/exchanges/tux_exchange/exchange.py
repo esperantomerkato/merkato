@@ -11,7 +11,11 @@ from merkato.exchanges.tux_exchange.utils import getQueryParameters, translate_t
 from merkato.constants import MARKET
 from merkato.exchanges.exchange_base import ExchangeBase
 from merkato.constants import BUY, SELL
+from requests.adapters import HTTPAdapter
 
+s = requests.Session()
+s.mount('http', HTTPAdapter(max_retries=3))
+s.mount('https', HTTPAdapter(max_retries=3))
 log = logging.getLogger(__name__)
 getcontext().prec = 8
 
