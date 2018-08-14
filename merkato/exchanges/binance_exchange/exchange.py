@@ -183,7 +183,20 @@ class BinanceExchange(ExchangeBase):
         while attempt < self.retries:
             try:
                 orders = self.client.get_open_orders(symbol=self.ticker, recvWindow=10000000)
-                log.info(orders)
+                new_dict = {}
+                for order in orders:
+                    id = order['orderId']
+                    new_dict[id] = order
+                    new_dict[id]['id'] = id
+                    if order['side'] == 'BUY':
+                        new_dict[id]['type'] = 'buy'
+                    else:
+                        new_dict[id]['type'] = 'sell'
+                    
+                    origQty = Decimal(float(order['origQty']))
+                    executedQty = Decimal(float(order['executedQty']))
+                    new_dict[id]['amount'] = origQty - executedQty
+                return new_dict
 
             except Exception as e:  # TODO - too broad exception handling
                 if attempt == self.retries - 1:
@@ -193,20 +206,7 @@ class BinanceExchange(ExchangeBase):
                     attempt += 1
 
         # orders is an array of dicts we need to transform it to an dict of dicts to conform to binance
-        new_dict = {}
-        for order in orders:
-            id = order['orderId']
-            new_dict[id] = order
-            new_dict[id]['id'] = id
-            if order['side'] == 'BUY':
-                new_dict[id]['type'] = 'buy'
-            else:
-                new_dict[id]['type'] = 'sell'
-            
-            origQty = Decimal(float(order['origQty']))
-            executedQty = Decimal(float(order['executedQty']))
-            new_dict[id]['amount'] = origQty - executedQty
-        return new_dict
+       
 
 
     def cancel_order(self, order_id):
@@ -314,11 +314,13 @@ class BinanceExchange(ExchangeBase):
                 trades = self.client.get_my_trades(symbol=self.ticker, recvWindow=10000000)
                 trades.reverse()
                 return trades
+                  
+
             except Exception as e:  # TODO - too broad exception handling
                 if attempt == self.retries - 1:
                     raise ValueError(e)
                 else:
-                    log.info("get_my_trade_history on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    log.info("get_ticker on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
                     attempt += 1
 
 
