@@ -179,7 +179,19 @@ class BinanceExchange(ExchangeBase):
     def get_my_open_orders(self, context_formatted=False):
         ''' Returns all open orders for the authenticated user '''
                 
-        orders = self.client.get_open_orders(symbol=self.ticker, recvWindow=10000000)
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                orders = self.client.get_open_orders(symbol=self.ticker, recvWindow=10000000)
+                log.info(orders)
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_my_open_orders on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
+
         # orders is an array of dicts we need to transform it to an dict of dicts to conform to binance
         new_dict = {}
         for order in orders:
@@ -218,15 +230,20 @@ class BinanceExchange(ExchangeBase):
             it will return the ticker data for all coins.
             :param coin: string (of the format BTC_XYZ)
         '''
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                ticker = self.client.get_ticker(symbol=coin)
+                log.info(ticker)
+                return ticker                   
 
-        ticker = self.client.get_ticker(symbol=coin)
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_ticker on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
 
-        # if not coin:
-        #     return json.loads(response.text)
-        # response_json = json.loads(response.text)
-        log.info(ticker)
-
-        return ticker
 
 
     def get_24h_volume(self, coin=None):
@@ -291,14 +308,18 @@ class BinanceExchange(ExchangeBase):
         ''' TODO Function Definition
         '''
         log.info("Getting trade history...")
-        # start_is_provided = start != 0 and start != ''
-        # print('start', start)
-        # if start_is_provided:
-        #     trades = self.client.get_my_trades(symbol=self.ticker, fromId=int(start), recvWindow=10000000)
-        # else:
-        trades = self.client.get_my_trades(symbol=self.ticker, recvWindow=10000000)
-        trades.reverse()
-        return trades
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                trades = self.client.get_my_trades(symbol=self.ticker, recvWindow=10000000)
+                trades.reverse()
+                return trades
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_my_trade_history on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
 
 
     def get_last_trade_price(self):
