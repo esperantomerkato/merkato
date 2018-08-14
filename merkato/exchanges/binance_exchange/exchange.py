@@ -170,10 +170,20 @@ class BinanceExchange(ExchangeBase):
         '''
         # TODO: Accept BTC_XYZ by stripping BTC_ if it exists
 
-        orders = self.client.get_order_book(symbol=self.ticker)
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                orders = self.client.get_order_book(symbol=self.ticker)
+                log.info("get_all_orders", orders)
+                return orders                
 
-        log.info("get_all_orders", orders)
-        return orders
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_all_orders on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
+
 
 
     def get_my_open_orders(self, context_formatted=False):
@@ -343,12 +353,34 @@ class BinanceExchange(ExchangeBase):
     
     
     def is_partial_fill(self, order_id): 
-        order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
-        amount_placed = Decimal(order_info['origQty'])
-        amount_executed = Decimal(order_info['executedQty'])
-        log.info('Binance checking_is_partial_fill order_id: {} amount_placed: {} amount_executed: {}'.format(order_id, amount_placed, amount_executed))
-        return amount_placed > amount_executed
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
+                amount_placed = Decimal(order_info['origQty'])
+                amount_executed = Decimal(order_info['executedQty'])
+                log.info('Binance checking_is_partial_fill order_id: {} amount_placed: {} amount_executed: {}'.format(order_id, amount_placed, amount_executed))
+                return amount_placed > amount_executed               
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("is_partial_fill on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
+
 
     def get_total_amount(self, order_id):
-        order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
-        return Decimal(order_info['origQty'])
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
+                return Decimal(order_info['origQty'])          
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_total_amount on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
+
