@@ -230,9 +230,18 @@ class BinanceExchange(ExchangeBase):
             log.warning("Cancel order id 0. Bailing")
             return False
 
-        return self.client.cancel_order(
-            symbol=self.ticker,
-            orderId=order_id)
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                canceled_order = self.client.cancel_order(symbol=self.ticker, orderId=order_id)
+                return canceled_order                   
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_ticker on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
 
 
     def get_ticker(self, coin=None):
@@ -274,13 +283,28 @@ class BinanceExchange(ExchangeBase):
         return response_json[coin]
 
 
+    def get_balance(self, asset):
+        attmept = 0
+        while attempt < self.retries:
+            try:
+                balance = self.client.get_asset_balance(asset=asset, recvWindow=10000000)
+                return balance
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_balance on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
+
+
     def get_balances(self):
         ''' TODO Function Definition
         '''
 
         # also keys go unused, also coin...
-        base_balance = self.client.get_asset_balance(asset=self.base, recvWindow=10000000)
-        coin_balance = self.client.get_asset_balance(asset=self.coin, recvWindow=10000000)
+        base_balance = self.get_balance(asset=self.base)
+        coin_balance = self.get_balance(asset=self.coin)
         base = Decimal(base_balance['free']) + Decimal(base_balance['locked'])
         coin = Decimal(coin_balance['free']) + Decimal(coin_balance['locked'])
 
@@ -311,8 +335,24 @@ class BinanceExchange(ExchangeBase):
             trade['total'] = Decimal(trade['price']) * Decimal(trade['qty'])
             trade['amount'] = Decimal(trade['qty'])
             if not context_only:
-                order_info = self.client.get_order(symbol=self.ticker, orderId=trade['orderId'], recvWindow=10000000)
+                order_info = self.get_order_info(orderId=trade['orderId'])
                 trade['initamount'] = order_info['origQty']
+
+
+    def get_order_info(self, order_id):
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
+                return order_info       
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_order_info on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
+
 
     def get_my_trade_history(self, start=0, end=0):
         ''' TODO Function Definition
@@ -353,34 +393,14 @@ class BinanceExchange(ExchangeBase):
     
     
     def is_partial_fill(self, order_id): 
-        attempt = 0
-        while attempt < self.retries:
-            try:
-                order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
-                amount_placed = Decimal(order_info['origQty'])
-                amount_executed = Decimal(order_info['executedQty'])
-                log.info('Binance checking_is_partial_fill order_id: {} amount_placed: {} amount_executed: {}'.format(order_id, amount_placed, amount_executed))
-                return amount_placed > amount_executed               
-
-            except Exception as e:  # TODO - too broad exception handling
-                if attempt == self.retries - 1:
-                    raise ValueError(e)
-                else:
-                    log.info("is_partial_fill on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
-                    attempt += 1
+        order_info = self.get_order_info(order_id)
+        amount_placed = Decimal(order_info['origQty'])
+        amount_executed = Decimal(order_info['executedQty'])
+        log.info('Binance checking_is_partial_fill order_id: {} amount_placed: {} amount_executed: {}'.format(order_id, amount_placed, amount_executed))
+        return amount_placed > amount_executed               
 
 
     def get_total_amount(self, order_id):
-        attempt = 0
-        while attempt < self.retries:
-            try:
-                order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
-                return Decimal(order_info['origQty'])          
-
-            except Exception as e:  # TODO - too broad exception handling
-                if attempt == self.retries - 1:
-                    raise ValueError(e)
-                else:
-                    log.info("get_total_amount on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
-                    attempt += 1
+        order_info = self.get_order_info(order_id)
+        return Decimal(order_info['origQty'])          
 
