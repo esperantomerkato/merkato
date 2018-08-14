@@ -320,7 +320,6 @@ class BinanceExchange(ExchangeBase):
         return pair_balances
 
     def process_new_transactions(self, new_txs, context_only=False):
-        print('new_txs', new_txs)
         for trade in new_txs:
 
             if trade['isBuyer'] == True:
@@ -336,8 +335,7 @@ class BinanceExchange(ExchangeBase):
             trade['total'] = Decimal(trade['price']) * Decimal(trade['qty'])
             trade['amount'] = Decimal(trade['qty'])
             if not context_only:
-                print('trade', trade)
-                order_info = self.get_order_info(orderId=trade['orderId'])
+                order_info = self.get_order_info(order_id=trade['orderId'])
                 trade['initamount'] = order_info['origQty']
 
 
