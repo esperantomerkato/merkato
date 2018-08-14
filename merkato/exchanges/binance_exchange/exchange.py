@@ -284,7 +284,7 @@ class BinanceExchange(ExchangeBase):
 
 
     def get_balance(self, asset):
-        attmept = 0
+        attempt = 0
         while attempt < self.retries:
             try:
                 balance = self.client.get_asset_balance(asset=asset, recvWindow=10000000)
