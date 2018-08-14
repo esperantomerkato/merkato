@@ -337,8 +337,6 @@ class BinanceExchange(ExchangeBase):
             trade['amount'] = Decimal(trade['qty'])
             if not context_only:
                 print('trade', trade)
-                                order_info = self.client.get_order(symbol=self.ticker, orderId=trade['orderId'], recvWindow=10000000)
-
                 order_info = self.get_order_info(orderId=trade['orderId'])
                 trade['initamount'] = order_info['origQty']
 
