@@ -336,3 +336,72 @@ def dict_factory(cursor, row):
         d[col[0]] = row[idx]
 
     return d
+
+
+def drop_transactions_table():
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+        
+    finally:
+        c = conn.cursor()
+        c.execute('''DROP TABLE transactions''')
+        conn.commit()
+        conn.close()
+
+
+def create_transactions_table():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+        
+    finally:
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS merkatos
+                    (uuid text, base text, quote text, spread float, tx_id text, order_id text, price float, amount float, time float)''')
+        c.execute('''CREATE UNIQUE INDEX id_exchange_pair ON merkatos (uuid)''')
+        conn.commit()
+        conn.close()
+
+
+def no_transactions_table_exists():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute('''SELECT count(*) FROM sqlite_master WHERE type="table" AND name="transactions"''')
+        number_of_mutex_tables = c.fetchall()[0][0]
+        conn.commit()
+        conn.close()
+
+        return number_of_mutex_tables == 0
+
+
+def insert_transaction(uuid, base='BTC', quote='XMR', spread='.015', tx_id=0, order_id=0, price=.00176, amount=1, time=0):
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute("""REPLACE INTO merkatos 
+                    (uuid, base, quote, spread, tx_id, order_id, price, amount, time) VALUES (?,?,?,?,?,?,?,?,?)""",
+                    (uuid, base, quote, spread, tx_id, order_id, price, amount, time))
+        conn.commit()
+        conn.close()

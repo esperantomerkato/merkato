@@ -9,7 +9,7 @@ import logging
 from decimal import *
 from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
     ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, QUOTE_VOLUME, BASE_VOLUME
-from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato
+from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, insert_transaction
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, \
     get_first_order, get_time_of_last_order, get_market_results, log_all_methods
@@ -162,6 +162,8 @@ class Merkato(object):
                 self.apply_filled_difference(tx, total_amount)
                 self.quote_volume += total_amount
                 update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
+
+            insert_transaction(self.mutex_UUID, self.base, self.coin, self.spread, tx_id, orderid, price, filled_amount, tx['time'])
 
             if market != MARKET: 
                 log.info('NOT MARKET ORDER')
