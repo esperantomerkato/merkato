@@ -163,7 +163,7 @@ class Merkato(object):
                 self.quote_volume += total_amount
                 update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
 
-            insert_transaction(self.mutex_UUID, self.base, self.coin, self.spread, tx_id, orderid, price, filled_amount, tx['time'])
+            insert_transaction(self.mutex_UUID, self.exchange.base, self.exchange.coin, self.spread, tx_id, orderid, price, filled_amount, tx['time'])
 
             if market != MARKET: 
                 log.info('NOT MARKET ORDER')
