@@ -405,3 +405,22 @@ def insert_transaction(uuid, base='BTC', quote='XMR', spread='.015', tx_id=0, or
                     (uuid, base, quote, spread, tx_id, order_id, price, amount, time))
         conn.commit()
         conn.close()
+
+def get_all_transactions():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+        conn.row_factory = dict_factory
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute("SELECT * FROM transactions")
+        all_merkatos = c.fetchall()
+        conn.commit()
+        conn.close()
+
+        return all_merkatos
