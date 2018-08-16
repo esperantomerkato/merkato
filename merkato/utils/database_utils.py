@@ -363,9 +363,9 @@ def create_transactions_table():
         
     finally:
         c = conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS merkatos
+        c.execute('''CREATE TABLE IF NOT EXISTS transactions
                     (uuid text, base text, quote text, spread float, tx_id text, order_id text, price float, amount float, time float)''')
-        c.execute('''CREATE UNIQUE INDEX id_exchange_pair ON merkatos (uuid)''')
+        c.execute('''CREATE UNIQUE INDEX id_exchange_pair ON transactions (uuid)''')
         conn.commit()
         conn.close()
 
@@ -400,7 +400,7 @@ def insert_transaction(uuid, base='BTC', quote='XMR', spread='.015', tx_id=0, or
 
     finally:
         c = conn.cursor()
-        c.execute("""REPLACE INTO merkatos 
+        c.execute("""REPLACE INTO transactions 
                     (uuid, base, quote, spread, tx_id, order_id, price, amount, time) VALUES (?,?,?,?,?,?,?,?,?)""",
                     (uuid, base, quote, spread, tx_id, order_id, price, amount, time))
         conn.commit()
