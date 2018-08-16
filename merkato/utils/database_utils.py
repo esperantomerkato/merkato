@@ -365,7 +365,7 @@ def create_transactions_table():
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS transactions
                     (uuid text, base text, quote text, spread float, tx_id text, order_id text, price float, amount float, time integer)''')
-        c.execute('''CREATE UNIQUE INDEX id_exchange_pair ON transactions (uuid)''')
+        c.execute('''CREATE UNIQUE INDEX tx_exchange_pair ON transactions (uuid)''')
         conn.commit()
         conn.close()
 
