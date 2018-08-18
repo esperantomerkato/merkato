@@ -146,7 +146,9 @@ class Merkato(object):
 
                 self.apply_filled_difference(tx, total_amount)
                 self.base_volume += total_amount * Decimal(float(price))
-                update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.base_volume))
+
+                if float(price) < float(self.starting_price):
+                    update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.base_volume))
 
             if tx[TYPE] == BUY:
                 sell_price = Decimal(price) * ( 1  + self.spread)
@@ -161,7 +163,8 @@ class Merkato(object):
 
                 self.apply_filled_difference(tx, total_amount)
                 self.quote_volume += total_amount
-                update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
+                if float(price) > float(self.starting_price):
+                    update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
 
             insert_transaction(self.mutex_UUID, self.exchange.base, self.exchange.coin, float(self.spread), tx_id, orderid, float(price), float(filled_amount), tx['time'])
 
