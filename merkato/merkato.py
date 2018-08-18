@@ -392,7 +392,7 @@ class Merkato(object):
         log.info('market data: {}'.format(market_data))
         update_merkato(self.mutex_UUID, LAST_ORDER, last_txid)
 
-        market_order_filled = amount == amount_executed
+        market_order_filled = amount <= amount_executed
         if market_order_filled:
             if type_to_place == BUY:
                 price = price * Decimal(1 + self.spread)
