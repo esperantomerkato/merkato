@@ -148,8 +148,11 @@ class Merkato(object):
 
                 print('float(price)', float(price), '(float(self.starting_price) * float(1+(self.spread/2)))', (float(self.starting_price) * float(1+(self.spread/2))))
                 is_round_trip = float(price) < (float(self.starting_price) * float(1+(self.spread/2)))
+                print('is round trip', is_round_trip, 'sell')
                 if is_round_trip:
+                    print('adbout to add', self.base_volume)
                     self.base_volume += total_amount * Decimal(float(price))
+                    print('new base volume', self.base_volume)
                     update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.base_volume))
 
             if tx[TYPE] == BUY:
