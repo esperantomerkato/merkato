@@ -81,7 +81,7 @@ def insert_merkato(exchange, exchange_pair='tuxBTC_ETH', base='BTC', alt='XMR', 
     finally:
         c = conn.cursor()
         c.execute("""REPLACE INTO merkatos 
-                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, quote_volume, base_volume, step) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, quote_volume, base_volume, step, base_profit, quote_profit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                     (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, quote_volume, base_volume, step, base_profit, quote_profit))
         conn.commit()
         conn.close()
