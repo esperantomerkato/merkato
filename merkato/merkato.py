@@ -146,7 +146,7 @@ class Merkato(object):
 
                 self.apply_filled_difference(tx, total_amount)
 
-                is_round_trip = float(price) < (float(self.starting_price) * (1+(self.spread/2)))
+                is_round_trip = float(price) < (float(self.starting_price) * float(1+(self.spread/2)))
                 if is_round_trip:
                     self.base_volume += total_amount * Decimal(float(price))
                     update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.base_volume))
@@ -164,7 +164,7 @@ class Merkato(object):
 
                 self.apply_filled_difference(tx, total_amount)
 
-                is_round_trip = float(price) >= (float(self.starting_price) * (1-(self.spread/2)))
+                is_round_trip = float(price) >= (float(self.starting_price) * float(1-(self.spread/2)))
                 if is_round_trip:
                     self.quote_volume += total_amount
                     update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
