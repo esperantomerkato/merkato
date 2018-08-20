@@ -146,7 +146,7 @@ class Merkato(object):
 
                 self.apply_filled_difference(tx, total_amount)
 
-                is_round_trip = float(price) =< (float(self.starting_price) * float(1+(self.spread/2)))
+                is_round_trip = float(price) <= (float(self.starting_price) * float(1+(self.spread/2)))
                 if is_round_trip:
                     log.info('Is round trip sell price: {}'.format(price))
                     self.base_volume += total_amount * Decimal(float(price))
