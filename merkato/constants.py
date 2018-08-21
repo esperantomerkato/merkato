@@ -36,3 +36,8 @@ STARTING_PRICE = 'starting_price'
 QUOTE_VOLUME = 'quote_volume'
 BASE_VOLUME = 'base_volume'
 LIMIT = 'limit'
+
+round_trip_exchange_fees = {
+    'krak': .0032,
+    'bina': .002
+}

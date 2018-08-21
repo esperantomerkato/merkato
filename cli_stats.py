@@ -7,7 +7,7 @@ import sqlite3
 import time
 import pprint
 from merkato.utils.diagnostics import visualize_orderbook
-from gui.gui_utils import get_unmade_volume
+from merkato.constants import round_trip_exchange_fees
 
 def main():
     print("Merkato Alpha v0.1.1\n")
@@ -21,20 +21,19 @@ def main():
 
     merkatos = get_all_merkatos()
     for merkato in merkatos:
-        exchange_class = get_relevant_exchange(merkato['exchange'])
-        config = load_config(merkato['exchange'])
+        exchange_name = merkato['exchange']
+        exchange_class = get_relevant_exchange(exchange_name)
+        round_trip_fee = round_trip_exchange_fees[exchange_name]
+        config = load_config(exchange_name)
         exchange = exchange_class(config, merkato['alt'], merkato['base'])
-        last_trade_price = exchange.get_last_trade_price()
-        step = 1.0033
         spread = merkato['spread']
         initial_base = float(merkato['bid_reserved_balance']) * 4 + float(merkato['base_profit'])
         initial_quote = float(merkato['ask_reserved_balance']) * 4 + float(merkato['quote_profit'])
-        starting_price = merkato['starting_price']
         quote_volume = merkato['quote_volume']
         base_volume = merkato['base_volume']
 
-        base_profit = (base_volume) * spread
-        quote_profit = (quote_volume) * spread
+        base_profit = (base_volume) * (spread - round_trip_fee)
+        quote_profit = (quote_volume) * (spread - round_trip_fee)
 
         print('STATS FOR {}'.format(merkato['exchange_pair']))
         print('Quote Volume: {} Base Volume: {}'.format(quote_volume, base_volume))
