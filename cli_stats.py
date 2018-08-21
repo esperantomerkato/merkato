@@ -32,10 +32,9 @@ def main():
         starting_price = merkato['starting_price']
         quote_volume = merkato['quote_volume']
         base_volume = merkato['base_volume']
-        unmade_volume = get_unmade_volume(last_trade_price, starting_price, initial_base, initial_quote, spread, step)
 
-        base_profit = (base_volume - unmade_volume['base']) * spread
-        quote_profit = (quote_volume - unmade_volume['quote']) * spread
+        base_profit = (base_volume) * spread
+        quote_profit = (quote_volume) * spread
 
         print('STATS FOR {}'.format(merkato['exchange_pair']))
         print('Quote Volume: {} Base Volume: {}'.format(quote_volume, base_volume))
