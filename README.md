@@ -1,6 +1,6 @@
 # Merkato Beta v0.1.0
 
-Merkato is a cryptocurrency Market Making bot used for the purpose of generating cryptocurrency denominated profit.
+Merkato is a cryptocurrency market making bot used for the purpose of generating cryptocurrency denominated profit.
 
 PROPRIETARY CODE DO NOT TAKE, USE, REPURPUSE, PUBLISH, without written consent of 15chrjef
 
@@ -34,7 +34,7 @@ Set up your credentials for the exchange
 
 Once set up, run:
 ```
-python3 simple_app.py
+python3 basic_tk.py
 ```
 
 ## Running the tests
