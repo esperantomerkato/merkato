@@ -1,6 +1,6 @@
 # Merkato Beta v0.1.0
 
-Merkato is a Python cryptocurrency Market Making and Arbitrage bot
+Merkato is a cryptocurrency Market Making bot used for the purpose of generating cryptocurrency denominated profit.
 
 PROPRIETARY CODE DO NOT TAKE, USE, REPURPUSE, PUBLISH, without written consent of 15chrjef
 
@@ -57,9 +57,7 @@ Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c6
 
 ## Authors
 
-* **Creator**: [Livinginformation (Needmoney90)](https://github.com/Livinginformation)
-
-* **Core Contributors**: @evdc, @15chrjef, @nasaWelder
+* **Core Contributors**: @evdc, @15chrjef, @livinginformation, @nasaWelder
 
 See also the list of [other contributors](https://github.com/livinginformation/merkato/graphs/contributors) who participated in this project.
 
@@ -67,6 +65,3 @@ See also the list of [other contributors](https://github.com/livinginformation/m
 
 PROPRIETARY CODE DO NOT TAKE, USE, REPURPUSE, PUBLISH, without written consent of 15chrjef a bot to track stats across assets on exchanges
 
-## Acknowledgments
-
-* The Monero Project and Community
