@@ -3,7 +3,7 @@ from merkato.merkato import Merkato
 from merkato.parser import parse
 from merkato.utils.database_utils import no_merkatos_table_exists, create_merkatos_table, insert_merkato,\
      get_all_merkatos, get_exchange, no_exchanges_table_exists, create_exchanges_table, drop_merkatos_table,\
-     no_transactions_table_exists, create_transactions_table
+     no_transactions_table_exists, create_transactions_table, no_unmade_transactions_table_exists, create_unmade_transactions
 from merkato.utils import generate_complete_merkato_configs, get_start_option
 import sqlite3
 import time
@@ -12,6 +12,8 @@ import pprint
 def main():
     print("Merkato Alpha v0.1.1\n")
 
+    if no_unmade_transactions_table_exists():
+        create_unmade_transactions()
     if no_transactions_table_exists():
         create_transactions_table()
     if no_merkatos_table_exists():

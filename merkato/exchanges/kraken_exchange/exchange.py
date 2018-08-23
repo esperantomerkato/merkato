@@ -2,7 +2,7 @@ import json
 import requests
 import time
 from merkato.exchanges.exchange_base import ExchangeBase
-from merkato.constants import MARKET, SELL, BUY, LIMIT, ID
+from merkato.constants import MARKET, SELL, BUY, LIMIT, ID, round_trip_exchange_fees
 from merkato.exchanges.kraken_exchange.constants import DEPTH, ADD_ORDER, RESULT, OPEN_ORDERS, REF_ID, DESCRIPTION, CANCEL_ORDER, TICKER, TRADES_HISTORY, QUERY_ORDERS
 import krakenex
 from math import floor
@@ -28,7 +28,9 @@ class KrakenExchange(ExchangeBase):
         self.coin = coin
         self.base = base
         self.ticker = coin + 'XBT'
-        self.name = 'Kraken'
+        self.name = 'krak'
+        self.fee = round_trip_exchange_fees[self.name]
+
 
     def _sell(self, amount, ask):
         ''' Places a sell for a number of an asset at the indicated price (0.00000503 for example)

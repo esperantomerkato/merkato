@@ -429,3 +429,130 @@ def get_all_transactions():
         conn.close()
 
         return all_merkatos
+
+def create_unmade_transactions():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+        
+    finally:
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS unmade_transactions
+                    (uuid text, old_spread float, order_id text, price float, amount float, new_spread float)''')
+        c.execute('''CREATE UNIQUE INDEX unmade_uuid ON transactions (uuid)''')
+        conn.commit()
+        conn.close()
+
+
+def no_unmade_transactions_table_exists():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute('''SELECT count(*) FROM sqlite_master WHERE type="table" AND name="unmade_transactions"''')
+        number_of_mutex_tables = c.fetchall()[0][0]
+        conn.commit()
+        conn.close()
+
+        return number_of_mutex_tables == 0
+
+
+def insert_unmade_transaction(uuid, old_spread=.015, order_id=1, price=.0176, amount=.3, new_spread=.05):
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute("""REPLACE INTO transactions 
+                    (uuid, old_spread, order_id, price, amount, new_spread) VALUES (?,?,?,?,?,?)""",
+                    (uuid, old_spread, order_id, price, amount, new_spread))
+        conn.commit()
+        conn.close()
+
+def get_all_unmade_transactions():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+        conn.row_factory = dict_factory
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute("SELECT * FROM unmade_transactions")
+        all_merkatos = c.fetchall()
+        conn.commit()
+        conn.close()
+
+        return all_merkatos
+
+def get_unmade_transaction(uuid):
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+        conn.row_factory = dict_factory
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute('''SELECT * FROM unmade_transactions WHERE uuid = ?''', (uuid,))
+        unmade_transaction = c.fetchall()
+        conn.commit()
+        conn.close()
+
+        return unmade_transaction
+
+def complete_unmade_transaction(uuid):
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+        conn.row_factory = dict_factory
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute('''DELETE * FROM unmade_transactions WHERE uuid = ?''', (uuid,))
+        conn.commit()
+        conn.close()
+        return True
+
+def unmade_transaction_exists(UUID):
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute('''SELECT * FROM unmade_transactions WHERE exchange_pair = ?''', (UUID,))
+        result = len(c.fetchall())
+        conn.commit()
+        conn.close()
+
+        return result > 0

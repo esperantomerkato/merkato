@@ -2,7 +2,7 @@ import json
 import requests
 import time
 from merkato.exchanges.exchange_base import ExchangeBase
-from merkato.constants import MARKET
+from merkato.constants import MARKET, round_trip_exchange_fees
 from binance.client import Client
 from binance.enums import *
 from math import floor
@@ -31,6 +31,7 @@ class BinanceExchange(ExchangeBase):
         self.base = base
         self.ticker = coin + base
         self.name = 'bina'
+        self.fee = round_trip_exchange_fees[self.name]
 
     def _sell(self, amount, ask):
         ''' Places a sell for a number of an asset at the indicated price (0.00000503 for example)

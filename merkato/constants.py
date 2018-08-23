@@ -35,6 +35,8 @@ TYPE = 'type'
 STARTING_PRICE = 'starting_price'
 QUOTE_VOLUME = 'quote_volume'
 BASE_VOLUME = 'base_volume'
+BASE_PROFIT = 'base_profit'
+QUOTE_PROFIT = 'quote_profit'
 LIMIT = 'limit'
 
 round_trip_exchange_fees = {
