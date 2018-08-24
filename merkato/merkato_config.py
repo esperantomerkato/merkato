@@ -191,10 +191,38 @@ def process_start_option(option):
             return
 
         elif option == '6':
+            handle_change_spread()
+            return
+
+        elif option == '7':
             return False
 
         else:
             return False
+
+def handle_change_spread():
+    merkatos = get_all_merkatos()
+    complete_merkato_configs = generate_complete_merkato_configs(merkatos)
+
+    print('Select Merkato from available IDs')
+    for counter, complete_config in enumerate(complete_merkato_configs):
+        exchange_name = complete_config['configuration']['exchange'] + '_' + complete_config['base'] + '_' + complete_config['coin']
+        print('{} -> {}'.format(counter + 1,  exchange_name))
+    selection = input('Selection: ')
+    num_selection = int(selection) - 1
+    selection_exists = len(complete_merkato_configs) > num_selection + 1
+
+    if selection_exists:
+        complete_config = complete_merkato_configs[num_selection]
+        print('The current spread is {}'.format(complete_config['spread']))
+        new_spread = input('What should the new spread be? Selection: ')
+
+        password = getpass.getpass('Enter password for merkato: ')
+        decrypt_keys(config=complete_config['configuration'], password=password)
+        merkato = Merkato(**complete_config)
+        merkato.translate_spread(new_spread)
+    else:
+        handle_add_asset()
 
 def handle_drop_selection():
     should_drop_merkatos = input('Do you want to drop merkatos? y/n: ')

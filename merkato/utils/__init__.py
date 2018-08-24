@@ -107,6 +107,7 @@ def get_start_option():
     print("3 -> Add merkato (Requires existing exchanges)")
     print("4 -> Drop tables")
     print("5 -> Add asset to a Merkato")
+    print("6 -> change spread of a Merkato")
     print("6 -> Exit")
     return input("Selection: ")
 

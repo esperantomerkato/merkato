@@ -10,7 +10,8 @@ from decimal import *
 from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
     ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, QUOTE_VOLUME, BASE_VOLUME, BASE_PROFIT, QUOTE_PROFIT
 from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, insert_transaction, \
-    insert_unmade_transaction, unmade_transaction_exists, get_unmade_transaction, get_merkato, complete_unmade_transaction
+    insert_unmade_transaction, unmade_transaction_exists, get_unmade_transaction, get_merkato, complete_unmade_transaction, \
+    get_all_unmade_transactions
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, \
     get_first_order, get_time_of_last_order, get_market_results, log_all_methods
@@ -112,7 +113,7 @@ class Merkato(object):
             orderid = tx['orderId']
             tx_id   = tx[ID]
             price   = tx[PRICE]
-            unmade_tx_id = self.mutex_UUID + price + orderid + tx[TYPE]
+            unmade_tx_id = self.mutex_UUID + price + orderid
             is_unmade_transaction = unmade_transaction_exists(unmade_tx_id)
             
             filled_amount = Decimal(tx['amount'])
@@ -699,15 +700,14 @@ class Merkato(object):
         check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
 
     def translate_spread(self, new_spread):
+        new_spread = float(new_spread)
         current_orders = self.exchange.get_my_open_orders()
         for order_id, order in current_orders.items():
-            current_amount = order['amount']
+            current_amount = float(order['amount'])
             order_type = order['type']
-            order_price = Decimal(float(order['price']))
-            old_unmade_id = self.mutex_UUID + order_price + order_id + order_type
-            spread_factor = (self.spread - new_spread)/2
-            print('cancel order')
-            print('coin', coin, 'self.exchange.coin', self.exchange.coin, 'order_type', order_type )
+            order_price = float(order['price'])
+            old_unmade_id = self.mutex_UUID + order_price + order_id
+            spread_factor = (float(self.spread) - new_spread)/2
             if order_type == SELL:
                 new_price = order_price * (1 + spread_factor) 
                 self.exchange.cancel_order(order['id'])
@@ -719,14 +719,11 @@ class Merkato(object):
                 new_order_id = self.exchange.buy(current_amount, new_price)['orderId']
                 print('replace buy')
             if unmade_transaction_exists(old_unmade_id):
-                # update new_spread
-                # get old data
                 old_unmade_tx = get_unmade_transaction(old_unmade_id)
-                # update with new order_id
                 old_unmade_tx['order_id'] = new_order_id
                 old_unmade_tx['new_spread'] = new_spread
-                old_unmade_tx['uuid'] = self.mutex_UUID + order_price + order_id + order_type
-                # replace old unmade_order
+                old_unmade_tx['uuid'] = self.mutex_UUID + order_price + order_id
                 insert_unmade_transaction(old_unmade_tx)
-        self.spread = new_spread
-        update_merkato(self.mutex_UUID, 'spread', self.spread)
+        self.spread = Decimal(new_spread)
+        update_merkato(self.mutex_UUID, 'spread', float(self.spread))
+        print('get_all_unmade_transactions', get_all_unmade_transactions())
