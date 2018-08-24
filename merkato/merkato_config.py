@@ -209,11 +209,11 @@ def handle_change_spread():
         exchange_name = complete_config['configuration']['exchange'] + '_' + complete_config['base'] + '_' + complete_config['coin']
         print('{} -> {}'.format(counter + 1,  exchange_name))
     selection = input('Selection: ')
-    num_selection = int(selection) - 1
-    selection_exists = len(complete_merkato_configs) > num_selection + 1
-
+    num_selection = int(selection)
+    selection_exists = len(complete_merkato_configs) >= num_selection
+    print('selection exists', selection_exists, 'nul selec', num_selection, 'len', len(complete_merkato_configs))
     if selection_exists:
-        complete_config = complete_merkato_configs[num_selection]
+        complete_config = complete_merkato_configs[num_selection-1]
         print('The current spread is {}'.format(complete_config['spread']))
         new_spread = input('What should the new spread be? Selection: ')
 

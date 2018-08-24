@@ -19,7 +19,7 @@ class Orderbook:
         order = self.create_order(userID, amount, price, BUY)
         self.bids.append(order)
         self.bids = sorted(self.bids, key=lambda bid: bid["price"], reverse=True)
-        return order['orderid']
+        return order
         #if is_market_order:
         #    return self.resolve_market_order()
     
@@ -30,21 +30,9 @@ class Orderbook:
         self.asks.append(order)
         # sort asks
         self.asks = sorted(self.asks, key=lambda ask: ask["price"])
-        return order['orderId']
+        return order
 
     def get_order(self, order_id):
-        for order in self.bids:
-            if int(order['id']) == order_id:
-                return order
-
-        for order in self.asks:
-            if int(order['id']) == order_id:
-                return order
-
-        for order in self.resolved:
-            if int(order['id']) == order_id:
-                print("In resolved")
-                return order    def get_order(self, order_id):
         for order in self.bids:
             if int(order['id']) == order_id:
                 return order
@@ -116,7 +104,7 @@ class Orderbook:
         }   
 
         new_order['initamount'] = amount
-
+        new_order['amount'] = amount
         new_order['total'] = float(price) * float(amount)
        
         self.current_order_id += 1

@@ -20,7 +20,7 @@ class TestExchange(ExchangeBase):
         self.base = base
         self.name = "test"
         self.ticker = translate_ticker(coin=coin, base=base)
-        self.orderbook = Orderbook()
+        self.orderbook = Orderbook(test_bids, test_asks)
         self.user_id = user_id
         self.USER_ID = user_id
         self.user_accounts = accounts if accounts else {}
@@ -108,8 +108,9 @@ class TestExchange(ExchangeBase):
     def get_all_orders(self):
         ''' Returns all open orders for the current pair
         '''
-        final_bids = list(map(lambda x: [x[PRICE], x[AMOUNT]], self.orderbook.bids))
-        final_asks = list(map(lambda x: [x[PRICE], x[AMOUNT]], self.orderbook.asks))
+        print('self.adfasdf', self.orderbook.bids)
+        final_bids = list(map(lambda x: [x[PRICE], x['initamount']], self.orderbook.bids))
+        final_asks = list(map(lambda x: [x[PRICE], x['initamount']], self.orderbook.asks))
         return {
             "asks": final_asks,
             "bids": final_bids
@@ -161,8 +162,10 @@ class TestExchange(ExchangeBase):
             :param order_id: string
         '''
         # Broken, TODO
-        return ""
-
+        my_filtered_bids = list(filter(lambda order: order[USER_ID] == self.user_id and order['orderId'] != order_id, self.orderbook.bids))
+        my_filtered_asks = list(filter(lambda order: order[USER_ID] == self.user_id and order['orderId'] != order_id, self.orderbook.asks))
+        self.orderbook.asks = my_filtered_asks
+        self.orderbook.bids = my_filtered_bids
 
     def get_ticker(self):
         ''' Returns the current ticker data for the target coin.

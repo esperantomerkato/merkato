@@ -443,7 +443,7 @@ def create_unmade_transactions():
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS unmade_transactions
                     (uuid text, old_spread float, order_id text, price float, amount float, new_spread float)''')
-        c.execute('''CREATE UNIQUE INDEX unmade_uuid ON transactions (uuid)''')
+        c.execute('''CREATE UNIQUE INDEX unmade_uuid ON unmade_transactions (uuid)''')
         conn.commit()
         conn.close()
 
