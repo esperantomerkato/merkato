@@ -122,7 +122,7 @@ def start_merkatos(entered_password):
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--blockOnError', action='store_true', help="DEBUGGING ONLY: blocks all bots on error")
     parser.add_argument('-p', '--password', default="", help="password for decrypting db")
-    parser.add_argument('-d', '--delay', type=int, default=10000, help="delay in milliseconds between bot updates. Default 10000.")
+    parser.add_argument('-d', '--delay', type=int, default=500, help="delay in milliseconds between bot updates. Default 10000.")
 
     args = parser.parse_args()
     if not args.password:
