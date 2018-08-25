@@ -550,7 +550,7 @@ def unmade_transaction_exists(UUID):
 
     finally:
         c = conn.cursor()
-        c.execute('''SELECT * FROM unmade_transactions WHERE exchange_pair = ?''', (UUID,))
+        c.execute('''SELECT * FROM unmade_transactions WHERE uuid = ?''', (UUID,))
         result = len(c.fetchall())
         conn.commit()
         conn.close()
