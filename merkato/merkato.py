@@ -291,12 +291,12 @@ class Merkato(object):
         # total_to_distribute is in the base currency (usually BTC)
 
         # 2. Call decaying_bid_ladder on that start price, with the given step,
-        #    and half the total_to_distribute
-        self.decaying_bid_ladder(Decimal(total_to_distribute/2), self.step, price)
+        #    and the entire total_to_distribute
+        self.decaying_bid_ladder(Decimal(total_to_distribute), self.step, price)
 
         # 3. Call decaying_bid_ladder again halving the
         #    start_price, and halving the total_amount
-        self.decaying_bid_ladder(Decimal(total_to_distribute/4), self.step, price/2)
+        # self.decaying_bid_ladder(Decimal(total_to_distribute/4), self.step, price/2)
 
 
     def get_total_amount(self, init_amount, orderid):
@@ -352,12 +352,12 @@ class Merkato(object):
         # will never be completely exhausted (run out).
 
         # 2. Call decaying_ask_ladder on that start price, with the given step,
-        #    and half the total_to_distribute
-        self.decaying_ask_ladder(Decimal(total_to_distribute/2), self.step, price)
+        #    and the entire total_to_distribute
+        self.decaying_ask_ladder(Decimal(total_to_distribute), self.step, price)
 
         # 3. Call decaying_ask_ladder once more, doubling the
         #    start_price, and halving the total_amount
-        self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price * 2)
+        # self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price * 2)
 
 
     def distribute_initial_orders(self, total_base, total_alt):
