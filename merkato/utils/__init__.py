@@ -85,9 +85,9 @@ def get_reserve_balance(type):
     selection = float(input("Selection: "))
     return selection
 
-def get_merkato_variable(type):
+def get_merkato_variable(type, extra_message=''):
     print("What {} should be used?".format(type))
-    print('MUST BE A NUMBER')
+    print('MUST BE A NUMBER' + extra_message)
     selection = float(input("Selection: "))
     return selection
 

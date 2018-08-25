@@ -21,15 +21,15 @@ getcontext().prec = 8
 
 @log_all_methods
 class Merkato(object):
-    def __init__(self, configuration, coin, base, spread,
-                 bid_reserved_balance, ask_reserved_balance,
-                 user_interface=None, profit_margin=0, first_order='', starting_price=.018, quote_volume=0, base_volume=0, step=1.0033):
+    def __init__(self, configuration, coin, base, spread, bid_reserved_balance, ask_reserved_balance,
+                 user_interface=None, profit_margin=0, first_order='', starting_price=.018, quote_volume=0, 
+                 base_volume=0, step=1.0033, distribution_strategy=1 ):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
         UUID = configuration[EXCHANGE] + "coin={}_base={}".format(coin,base)
         self.mutex_UUID = UUID
-        self.distribution_strategy = 1
+        self.distribution_strategy = distribution_strategy
         self.spread = Decimal(spread)
         self.profit_margin = Decimal(profit_margin)
         self.starting_price = starting_price
@@ -289,14 +289,13 @@ class Merkato(object):
         # Allocates your market making balance on the bid side, in a way that
         # will never be completely exhausted (run out).
         # total_to_distribute is in the base currency (usually BTC)
-
-        # 2. Call decaying_bid_ladder on that start price, with the given step,
-        #    and the entire total_to_distribute
-        self.decaying_bid_ladder(Decimal(total_to_distribute), self.step, price)
-
-        # 3. Call decaying_bid_ladder again halving the
-        #    start_price, and halving the total_amount
-        # self.decaying_bid_ladder(Decimal(total_to_distribute/4), self.step, price/2)
+        if self.distribution_strategy == 1:
+            log.info('Distribute Agressive Bids')
+            self.decaying_bid_ladder(Decimal(total_to_distribute), self.step, price)
+        elif self.distribution_strategy == 2:
+            log.info('Distribute Neutral Bids')
+            self.decaying_bid_ladder(Decimal(total_to_distribute/(4/3)), self.step, price)
+            self.decaying_bid_ladder(Decimal(total_to_distribute/4), self.step, price/2)
 
 
     def get_total_amount(self, init_amount, orderid):
@@ -351,13 +350,15 @@ class Merkato(object):
         # Allocates your market making balance on the ask side, in a way that
         # will never be completely exhausted (run out).
 
-        # 2. Call decaying_ask_ladder on that start price, with the given step,
-        #    and the entire total_to_distribute
-        self.decaying_ask_ladder(Decimal(total_to_distribute), self.step, price)
 
-        # 3. Call decaying_ask_ladder once more, doubling the
-        #    start_price, and halving the total_amount
-        # self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price * 2)
+        if self.distribution_strategy == 1:
+            log.info('Distribute Aggressive Asks')
+            self.decaying_ask_ladder(Decimal(total_to_distribute), self.step, price)
+        elif self.distribution_strategy == 2:
+            log.info('Distribute Neutral Asks')
+            self.decaying_ask_ladder(Decimal(total_to_distribute/(4/3)), self.step, price)
+            self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price/2)
+
 
 
     def distribute_initial_orders(self, total_base, total_alt):
