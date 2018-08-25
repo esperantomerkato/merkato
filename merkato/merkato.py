@@ -113,7 +113,7 @@ class Merkato(object):
             orderid = tx['orderId']
             tx_id   = tx[ID]
             price   = tx[PRICE]
-            unmade_tx_id = self.mutex_UUID + price + orderid
+            unmade_tx_id = self.mutex_UUID + str(price) + str(orderid)
             is_unmade_transaction = unmade_transaction_exists(unmade_tx_id)
             
             filled_amount = Decimal(tx['amount'])
