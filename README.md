@@ -25,17 +25,26 @@ For Python3
 ```
 ## Getting Started
 
-Run the following from the top level directory:
+Run the following from the top level directory: (Outputs logs to output.log)
 ```
-python3 db_init_script.py
+python3 cli_start.py 2>&1 | tee -a output.log
 ```
 
-Set up your credentials for the exchange
+#IMPORTANT FOLLOW THE SETUP INSTRUCTIONS FOR EACH OPTION PROPERTLY, ENTERING INCORRECT DATA WILL LEAD TO PROBLEMS#
+From this menu you can
+1. Set up your credentials for the exchange (WILL REQUIRE A PASSWORD WHICH SHOULD BE UNIFORM ACROSS ALL EXCHANGES, PASSWORD USED TO ENCRPT KEYS)
+2. add a new merkato
+3. run current merkatos 
+4. manage current merkatos
 
-Once set up, run:
+## Checking Data
+
+run the following from the top level directory:
 ```
-python3 basic_tk.py
+python3 cli_stats.py
 ```
+This will show the data and profitability of each merkato run in a directory
+Profit is calculated based only on round trips
 
 ## Running the tests
 
