@@ -23,24 +23,30 @@ def main():
     for merkato in merkatos:
         exchange_name = merkato['exchange']
         exchange_class = get_relevant_exchange(exchange_name)
-        round_trip_fee = round_trip_exchange_fees[exchange_name]
+        # round_trip_fee = round_trip_exchange_fees[exchange_name]
         config = load_config(exchange_name)
         exchange = exchange_class(config, merkato['alt'], merkato['base'])
-        spread = merkato['spread']
-        initial_base = float(merkato['bid_reserved_balance']) * 4 + float(merkato['base_profit'])
-        initial_quote = float(merkato['ask_reserved_balance']) * 4 + float(merkato['quote_profit'])
-        quote_volume = merkato['quote_volume']
-        base_volume = merkato['base_volume']
+        # spread = merkato['spread']
+        initial_base = float(merkato['bid_reserved_balance']) * 4
+        initial_quote = float(merkato['ask_reserved_balance']) * 4
+        # quote_volume = merkato['quote_volume']
+        # base_volume = merkato['base_volume']
+        # base_profit = (base_volume) * (spread - round_trip_fee)
+        # quote_profit = (quote_volume) * (spread - round_trip_fee)
 
-        base_profit = (base_volume) * (spread - round_trip_fee)
-        quote_profit = (quote_volume) * (spread - round_trip_fee)
+        absolute_balances = exchange.get_balances()
+        absolute_base = float(absolute_balances['base']['amount']['balance'])
+        absolute_quote = float(absolute_balances['coin']['amount']['balance'])
 
         print('STATS FOR {}'.format(merkato['exchange_pair']))
-        print('Quote Volume: {} Base Volume: {}'.format(quote_volume, base_volume))
-        print('Quote Profit: {} Base Profit: {}'.format(quote_profit, base_profit))
-        relative_base_prof = str((base_profit/initial_base) * 100) + '%'
-        relative_quote_prof = str((quote_profit/initial_quote ) * 100) + '%'
-        print('Relative Quote Profit: {} Relative Base Profit: {}'.format(relative_quote_prof, relative_base_prof))
+        print('Initial Base: {} Initial Quote: {} '.format(initial_base, initial_quote))
+        print('Current Base: {} Current Quote: {}'.format(absolute_base, absolute_quote))
+        print('Absolute Base Diff: {} Absolute Quote Diff: {}'.format(absolute_base - initial_base, absolute_quote - initial_quote))
+        # print('Quote Volume: {} Base Volume: {}'.format(quote_volume, base_volume))
+        # print('Quote Profit: {} Base Profit: {}'.format(quote_profit, base_profit))
+        # relative_base_prof = str((base_profit/initial_base) * 100) + '%'
+        # relative_quote_prof = str((quote_profit/initial_quote ) * 100) + '%'
+        # print('Relative Quote Profit: {} Relative Base Profit: {}'.format(relative_quote_prof, relative_base_prof))
 
 if __name__ == '__main__':
     main()
