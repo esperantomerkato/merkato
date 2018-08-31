@@ -23,7 +23,7 @@ getcontext().prec = 8
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread, bid_reserved_balance, ask_reserved_balance,
                  user_interface=None, profit_margin=0, first_order='', starting_price=.018,
-                 step=1.0033, distribution_strategy=1, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0 ):
+                 step=1.0033, distribution_strategy=1, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0, unmade_stack=[] ):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
@@ -34,8 +34,8 @@ class Merkato(object):
         self.profit_margin = Decimal(profit_margin)
         self.starting_price = starting_price
         self.step = step
-        self.quote_profit = quote_profit
-        self.base_profit = base_profit
+        self.quote_profit = Decimal(quote_profit)
+        self.base_profit = Decimal(base_profit)
         # Exchanges have a maximum number of orders every user can place. Due
         # to this, every Merkato has a reserve of coins that are not currently
         # allocated. As the price approaches unallocated regions, the reserves
@@ -164,7 +164,7 @@ class Merkato(object):
                         complete_unmade_transaction(unmade_tx_id)
                     else:
                         log.info('Is round trip sell price: {}'.format(price))
-                        self.base_profit += total_amount * Decimal(float(price)) * (self.spread - (self.exchange.fee *2))
+                        self.base_profit += total_amount * Decimal(float(price)) * (self.spread - Decimal(self.exchange.fee *2))
                         update_merkato(self.mutex_UUID, BASE_PROFIT, float(self.base_profit))
                     
 
@@ -192,7 +192,7 @@ class Merkato(object):
                         complete_unmade_transaction(unmade_tx_id)
                     else:
                         log.info('Is round trip buy price: {}'.format(price))
-                        self.quote_profit += total_amount * (self.spread - (self.exchange.fee *2))
+                        self.quote_profit += total_amount * Decimal(self.spread - Decimal(self.exchange.fee *2))
                         update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(self.quote_profit))
 
             insert_transaction(self.mutex_UUID, self.exchange.base, self.exchange.coin, float(self.spread), tx_id, orderid, float(price), float(filled_amount), tx['time'])

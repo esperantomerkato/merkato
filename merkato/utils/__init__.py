@@ -158,7 +158,7 @@ def generate_complete_merkato_configs(merkato_objects):
         complete_config['quote_profit'] = merkato['quote_profit']
         complete_config['init_quote_balance'] = merkato['init_quote_balance']
         complete_config['init_base_balance'] = merkato['init_base_balance']
-        complete_config['unmade_stack'] = json.loads(merkato['unmade_stack'])
+        complete_config['unmade_stack'] = merkato['unmade_stack']
         merkato_complete_configs.append(complete_config)
     return merkato_complete_configs
 

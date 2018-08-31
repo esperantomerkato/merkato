@@ -16,3 +16,4 @@ change_reserves.py
 get_orders.py
 profit.py
 output.log
+testmy_merkato_tax_audit_logs.csv
