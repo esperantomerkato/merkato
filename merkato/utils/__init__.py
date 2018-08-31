@@ -1,9 +1,10 @@
 import logging
+import json
 from merkato.exchanges.test_exchange.exchange import TestExchange
 from merkato.exchanges.tux_exchange.exchange import TuxExchange
 from merkato.exchanges.binance_exchange.exchange import BinanceExchange
 from merkato.constants import known_exchanges, known_assets
-from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato
+from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato, update_merkato
 import base64
 import time
 import getpass
@@ -157,9 +158,13 @@ def generate_complete_merkato_configs(merkato_objects):
         complete_config['quote_profit'] = merkato['quote_profit']
         complete_config['init_quote_balance'] = merkato['init_quote_balance']
         complete_config['init_base_balance'] = merkato['init_base_balance']
+        complete_config['unmade_stack'] = json.loads(merkato['unmade_stack'])
         merkato_complete_configs.append(complete_config)
     return merkato_complete_configs
 
+def update_unmade_stack(stack, merkato_uuid):
+    string_stack = json.dumps(stack)
+    update_merkato(merkato_uuid, 'unmade_stack', string_stack)
 
 def get_allocated_pair_balances(exchange, base, coin):
     allocated_pair_balances = {
