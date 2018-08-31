@@ -153,8 +153,10 @@ def generate_complete_merkato_configs(merkato_objects):
         complete_config['starting_price'] = merkato['starting_price']
         complete_config['ask_reserved_balance'] = merkato['ask_reserved_balance']
         complete_config['bid_reserved_balance'] = merkato['bid_reserved_balance']
-        complete_config['quote_volume'] = merkato['quote_volume']
-        complete_config['base_volume'] = merkato['base_volume']
+        complete_config['base_profit'] = merkato['base_profit']
+        complete_config['quote_profit'] = merkato['quote_profit']
+        complete_config['init_quote_balance'] = merkato['init_quote_balance']
+        complete_config['init_base_balance'] = merkato['init_base_balance']
         merkato_complete_configs.append(complete_config)
     return merkato_complete_configs
 

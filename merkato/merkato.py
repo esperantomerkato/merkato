@@ -8,7 +8,7 @@ import logging
 
 from decimal import *
 from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
-    ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, QUOTE_VOLUME, BASE_VOLUME, BASE_PROFIT, QUOTE_PROFIT
+    ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, BASE_PROFIT, QUOTE_PROFIT, INIT_BASE_BALANCE, INIT_QUOTE_BALANCE
 from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, insert_transaction, \
     insert_unmade_transaction, unmade_transaction_exists, get_unmade_transaction, get_merkato, complete_unmade_transaction, \
     get_all_unmade_transactions
@@ -22,8 +22,8 @@ getcontext().prec = 8
 @log_all_methods
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread, bid_reserved_balance, ask_reserved_balance,
-                 user_interface=None, profit_margin=0, first_order='', starting_price=.018, quote_volume=0, 
-                 base_volume=0, step=1.0033, distribution_strategy=1 ):
+                 user_interface=None, profit_margin=0, first_order='', starting_price=.018,
+                 step=1.0033, distribution_strategy=1, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0 ):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
@@ -33,16 +33,17 @@ class Merkato(object):
         self.spread = Decimal(spread)
         self.profit_margin = Decimal(profit_margin)
         self.starting_price = starting_price
-        self.quote_volume = Decimal(quote_volume)
-        self.base_volume = Decimal(base_volume)
         self.step = step
+        self.quote_profit = quote_profit
+        self.base_profit = base_profit
         # Exchanges have a maximum number of orders every user can place. Due
         # to this, every Merkato has a reserve of coins that are not currently
         # allocated. As the price approaches unallocated regions, the reserves
         # are deployed.
         self.bid_reserved_balance = Decimal(float(bid_reserved_balance))
         self.ask_reserved_balance = Decimal(float(ask_reserved_balance))
-
+        self.init_base_balance = init_base_balance
+        self.init_quote_balance = init_quote_balance
         # The current sum of all partially filled orders
         self.base_partials_balance = 0
         self.quote_partials_balance = 0
@@ -66,7 +67,7 @@ class Merkato(object):
             allocated_pair_balances = get_allocated_pair_balances(configuration['exchange'], base, coin)
             check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
 
-            insert_merkato(configuration[EXCHANGE], self.mutex_UUID, base, coin, spread, bid_reserved_balance, ask_reserved_balance, first_order, starting_price)
+            insert_merkato(configuration[EXCHANGE], self.mutex_UUID, base, coin, spread, bid_reserved_balance, ask_reserved_balance, first_order, starting_price, init_base_balance=bid_reserved_balance, init_quote_balance=ask_reserved_balance)
             history = self.exchange.get_my_trade_history()
 
             log.debug('initial history: {}'.format(history))
@@ -163,8 +164,8 @@ class Merkato(object):
                         complete_unmade_transaction(unmade_tx_id)
                     else:
                         log.info('Is round trip sell price: {}'.format(price))
-                        self.base_volume += total_amount * Decimal(float(price))
-                        update_merkato(self.mutex_UUID, BASE_VOLUME, float(self.base_volume))
+                        self.base_profit += total_amount * Decimal(float(price)) * (self.spread - (self.exchange.fee *2))
+                        update_merkato(self.mutex_UUID, BASE_PROFIT, float(self.base_profit))
                     
 
             if tx[TYPE] == BUY:
@@ -191,8 +192,8 @@ class Merkato(object):
                         complete_unmade_transaction(unmade_tx_id)
                     else:
                         log.info('Is round trip buy price: {}'.format(price))
-                        self.quote_volume += total_amount
-                        update_merkato(self.mutex_UUID, QUOTE_VOLUME, float(self.quote_volume))
+                        self.quote_profit += total_amount * (self.spread - (self.exchange.fee *2))
+                        update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(self.quote_profit))
 
             insert_transaction(self.mutex_UUID, self.exchange.base, self.exchange.coin, float(self.spread), tx_id, orderid, float(price), float(filled_amount), tx['time'])
 
@@ -459,8 +460,8 @@ class Merkato(object):
                 "balances": self.exchange.get_balances(),
                 "orderbook": self.exchange.get_all_orders(),
                 "starting_price": self.starting_price,
-                "starting_base": self.bid_reserved_balance * 4,
-                "starting_quote": self.ask_reserved_balance * 4,
+                "starting_base": self.base_quote_balance,
+                "starting_quote": self.init_quote_balance,
                 "spread": self.spread,
                 "step": self.step
                 }
@@ -499,8 +500,8 @@ class Merkato(object):
                    "balances": self.exchange.get_balances(),
                    "orderbook": self.exchange.get_all_orders(),
                    "starting_price": self.starting_price,
-                   "starting_base": self.bid_reserved_balance * 4,
-                   "starting_quote": self.ask_reserved_balance * 4,
+                   "starting_base": self.init_base_balance,
+                   "starting_quote": self.init_quote_balance,
                    "spread": self.spread,
                    "step": self.step
                    }

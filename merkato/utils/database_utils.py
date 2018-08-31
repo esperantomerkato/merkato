@@ -41,7 +41,7 @@ def create_merkatos_table():
         c.execute('''CREATE TABLE IF NOT EXISTS merkatos
                     (exchange text, exchange_pair text, base text, alt text, spread float, profit_limit integer, last_order text, 
                     first_order text, starting_price float, ask_reserved_balance float, bid_reserved_balance float, profit_margin integer, 
-                    base_partials_balance integer, quote_partials_balance integer, quote_volume integer, base_volume integer, step float,
+                    base_partials_balance integer, quote_partials_balance integer, init_base_balance integer, init_quote_balance integer, step float,
                     base_profit float, quote_profit float)''')
         c.execute('''CREATE UNIQUE INDEX id_exchange_pair ON merkatos (exchange_pair)''')
         conn.commit()
@@ -69,7 +69,7 @@ def no_merkatos_table_exists():
 
 def insert_merkato(exchange, exchange_pair='tuxBTC_ETH', base='BTC', alt='XMR', spread='.1', 
     bid_reserved_balance=0, ask_reserved_balance=0, first_order='', starting_price=.018, profit_limit=10, last_order='', 
-    profit_margin=0, step=1.0033, base_partials_balance=0, quote_partials_balance=0, base_volume=0, quote_volume=0, base_profit=0, quote_profit=0):
+    profit_margin=0, step=1.0033, base_partials_balance=0, quote_partials_balance=0, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0):
     ''' TODO: Function Comment
     '''
     try:
@@ -81,8 +81,8 @@ def insert_merkato(exchange, exchange_pair='tuxBTC_ETH', base='BTC', alt='XMR', 
     finally:
         c = conn.cursor()
         c.execute("""REPLACE INTO merkatos 
-                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, quote_volume, base_volume, step, base_profit, quote_profit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, quote_volume, base_volume, step, base_profit, quote_profit))
+                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, init_quote_balance, init_base_balance, step, base_profit, quote_profit) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, init_quote_balance, init_base_balance, step, base_profit, quote_profit))
         conn.commit()
         conn.close()
 
