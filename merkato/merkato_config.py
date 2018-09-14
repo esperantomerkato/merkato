@@ -245,7 +245,7 @@ def handle_add_asset():
         print('{} -> {}'.format(counter + 1,  exchange_name))
     selection = input('Selection: ')
     num_selection = int(selection) - 1
-    selection_exists = len(complete_merkato_configs) > num_selection + 1
+    selection_exists = len(complete_merkato_configs) > num_selection
 
     if selection_exists:
         complete_config = complete_merkato_configs[num_selection]
