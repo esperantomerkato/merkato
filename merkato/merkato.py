@@ -358,7 +358,7 @@ class Merkato(object):
         elif self.distribution_strategy == 2:
             log.info('Distribute Neutral Asks')
             self.decaying_ask_ladder(Decimal(total_to_distribute/(4/3)), self.step, price)
-            self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price/2)
+            self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price * 2)
 
 
 
