@@ -297,5 +297,6 @@ def create_new_merkato():
     merkato_args['profit_margin'] = get_merkato_variable('profit margin')
     merkato_args['step'] = get_merkato_variable('step')
     merkato_args['distribution_strategy'] = get_merkato_variable('distribution strategy', 'Input "1 for aggressive and "2" for neutral :')
+    merkato_args['starting_price'] = get_merkato_variable('starting price', 'Look up the last executed price on the exchange you are looking for ')
     Merkato(**merkato_args)
     return password
