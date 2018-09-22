@@ -232,13 +232,14 @@ class Merkato(object):
                 log.info('apply_filled_difference quote_partials_balance: {}'.format(self.quote_partials_balance))
 
 
-    def decaying_bid_ladder(self, total_amount, step, start_price):
+    def decaying_bid_ladder(self, total_amount, step, start_price, hyper=False):
         '''total_amount is denominated in the base asset (BTC)
         '''
         # Abandon all hope, ye who enter here. This function uses black magic (math).
 
         scaling_factor = 0
-        total_orders = floor(math.log(2, step)) # 277 for a step of 1.0025
+        scaling_log_factor = 2 if hyper == False else 1.5
+        total_orders = floor(math.log(scaling_log_factor, step)) # 277 for a step of 1.0025
         current_order = 0
         
         # Calculate scaling factor
@@ -297,6 +298,9 @@ class Merkato(object):
             log.info('Distribute Neutral Bids')
             self.decaying_bid_ladder(Decimal(total_to_distribute/(4/3)), self.step, price)
             self.decaying_bid_ladder(Decimal(total_to_distribute/4), self.step, price/2)
+        elif self.distribution_strategy == 3:
+            log.info('Distribute Hyper-Aggressive Bids')
+            self.decaying_bid_ladder(Decimal(total_to_distribute), self.step, price, True)
 
 
     def get_total_amount(self, init_amount, orderid):
@@ -315,7 +319,8 @@ class Merkato(object):
         # Abandon all hope, ye who enter here. This function uses black magic (math).
 
         scaling_factor = 0
-        total_orders = floor(math.log(2, step)) # 277 for a step of 1.0025
+        scaling_log_factor = 2 if hyper == False else 1.5
+        total_orders = floor(math.log(scaling_log_factor, step)) # 277 for a step of 1.0025
         current_order = 0
 
         # Calculate scaling factor
@@ -359,6 +364,9 @@ class Merkato(object):
             log.info('Distribute Neutral Asks')
             self.decaying_ask_ladder(Decimal(total_to_distribute/(4/3)), self.step, price)
             self.decaying_ask_ladder(Decimal(total_to_distribute/4), self.step, price * 2)
+        elif self.distribution_strategy == 3:
+            log.info('Distribute Hyper-Aggressive Asks')
+            self.decaying_ask_ladder(Decimal(total_to_distribute), self.step, price, True)
 
 
 
