@@ -269,3 +269,32 @@ def log_all_methods(cls):
         if callable(attr):
             setattr(cls, name, log_on_call(attr))
     return cls
+
+
+def log_new_cointrackr_transactions(newTransactionHistory, coin, base, name):
+    path="{}my_merkato_tax_audit_logs.csv".format(name)
+    scrubbed_history = []
+    for dirty_tx in newTransactionHistory:
+        scrubbed_tx = []
+        scrubbed_tx.append(dirty_tx['date'])
+        if dirty_tx['type'] == 'buy':
+            scrubbed_tx.append(dirty_tx['amount'])
+            scrubbed_tx.append(coin)
+            scrubbed_tx.append(dirty_tx['total'])
+            scrubbed_tx.append(base)
+        else:
+            scrubbed_tx.append(dirty_tx['total'])
+            scrubbed_tx.append(base)
+            scrubbed_tx.append(dirty_tx['amount'])
+            scrubbed_tx.append(coin)
+        scrubbed_history.append(scrubbed_tx)
+
+    headers_needed = not os.path.exists(path)
+
+    with open(path, 'a+') as csvfile:
+        fieldnames = ['Date', 'Recieved Quantity', "Currency", "Sent Quantity", "Currency"]
+        writer = csv.writer(csvfile)
+        if headers_needed:
+            writer.writerow(fieldnames)
+        for tx in scrubbed_history:
+            writer.writerow(tx)

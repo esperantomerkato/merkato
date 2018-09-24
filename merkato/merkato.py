@@ -14,7 +14,7 @@ from merkato.utils.database_utils import update_merkato, insert_merkato, merkato
     get_all_unmade_transactions
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, \
-    get_first_order, get_time_of_last_order, get_market_results, log_all_methods
+    get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions
 
 log = logging.getLogger(__name__)
 getcontext().prec = 8
@@ -212,7 +212,7 @@ class Merkato(object):
         for order in market_orders:
             self.handle_market_order(*order)
 
-        self.log_new_cointrackr_transactions(ordered_transactions)
+        log_new_cointrackr_transactions(ordered_transactions, self.exchange.coin, self.exchange.base, self.exchange.name)
         log.info('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
         return ordered_transactions
 
@@ -579,70 +579,6 @@ class Merkato(object):
             except:
                 pass
 
-
-    def log_new_transactions(self, newTransactionHistory, path="my_merkato_tax_audit_logs.csv"):
-        """
-        [
-            {'id': '430236', 'date': '2018-05-30 17:03:41', 'type': 'buy', 'price': '0.00000290',
-             'amount': '78275.86206896', 'total': '0.22700000', 'fee': '0.00000000', 'feepercent': '0.000',
-             'orderId': '86963799', 'market': 'BTC', 'coin': 'PEPECASH', 'market_pair': 'BTC_PEPECASH'},
-
-            {'id': '423240', 'date': '2018-04-22 06:19:19', 'type': 'sell', 'price': '0.00000500',
-             'amount': '6711.95200000', 'total': '0.03355976', 'fee': '0.00000000', 'feepercent': '0.000',
-             'orderId': '90404882', 'market': 'BTC', 'coin': 'PEPECASH', 'market_pair': 'BTC_PEPECASH'},
-            ...
-        ]
-        """
-        scrubbed_history = []
-        for dirty_tx in newTransactionHistory:
-            scrubbed_tx = dirty_tx.copy()
-            for k, v in scrubbed_tx.copy().items():
-                if k in ["price", "amount", "total", "fee", "feepercent"]:
-                    scrubbed_tx[k] = Decimal(v)
-                elif k in ["id", "orderId"]:
-                    scrubbed_tx[k] = int(v)
-            scrubbed_history.append(scrubbed_tx)
-
-        headers_needed = not os.path.exists(path)
-
-        with open(path, 'a+') as csvfile:
-            fieldnames = ['coin', 'market', 'market_pair', 'date', 'type',
-                          "id", "orderId", "price", "amount", "total", "fee"]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
-            if headers_needed:
-                writer.writeheader()
-            for tx in scrubbed_history:
-                writer.writerow(tx)
-
-
-    def log_new_cointrackr_transactions(self, newTransactionHistory):
-        path="{}my_merkato_tax_audit_logs.csv".format(self.exchange.name)
-        scrubbed_history = []
-        for dirty_tx in newTransactionHistory:
-            scrubbed_tx = []
-            scrubbed_tx.append(dirty_tx['date'])
-            if dirty_tx['type'] == 'buy':
-                scrubbed_tx.append(dirty_tx['amount'])
-                scrubbed_tx.append(self.exchange.coin)
-                scrubbed_tx.append(dirty_tx['total'])
-                scrubbed_tx.append(self.exchange.base)
-            else:
-                scrubbed_tx.append(dirty_tx['total'])
-                scrubbed_tx.append(self.exchange.base)
-                scrubbed_tx.append(dirty_tx['amount'])
-                scrubbed_tx.append(self.exchange.coin)
-            scrubbed_history.append(scrubbed_tx)
-
-        headers_needed = not os.path.exists(path)
-
-        with open(path, 'a+') as csvfile:
-            fieldnames = ['Date', 'Recieved Quantity', "Currency", "Sent Quantity", "Currency"]
-            writer = csv.writer(csvfile)
-            if headers_needed:
-                writer.writerow(fieldnames)
-            for tx in scrubbed_history:
-                writer.writerow(tx)
-
     def calculate_add_percentage(self, coin, amount_to_add):
         orderbook_sum = 0
         current_orders = self.exchange.get_my_open_orders()
@@ -655,14 +591,11 @@ class Merkato(object):
             elif coin == self.exchange.base and order_type == BUY:
                 orderbook_sum += float(current_amount) * float(order_price)
 
-        print('orderbook sum', orderbook_sum)
         if coin == self.exchange.coin:
             old_reserves = self.ask_reserved_balance + self.quote_partials_balance
         else:
             old_reserves = self.bid_reserved_balance + self.base_partials_balance      
-        print('old_reserves', old_reserves, self.quote_partials_balance, self.base_partials_balance) 
         total_amount = Decimal(orderbook_sum) + old_reserves
-        print('total_amount', total_amount)
         return amount_to_add/total_amount
 
     def update_orders(self, coin, amount_to_add):
@@ -670,7 +603,6 @@ class Merkato(object):
         amount_to_add = Decimal(float(amount_to_add))
         self.check_balances_available(coin, amount_to_add)
         add_percentage = self.calculate_add_percentage(coin, amount_to_add)
-        print('add percentage', add_percentage)
         if coin == self.exchange.coin:
             old_reserves = self.ask_reserved_balance + self.quote_partials_balance
         else:
@@ -681,16 +613,12 @@ class Merkato(object):
             order_type = order['type']
             order_price = Decimal(float(order['price']))
             amount_to_add = Decimal(float(current_amount * (1 + add_percentage)))
-            print('cancel order')
-            print('coin', coin, 'self.exchange.coin', self.exchange.coin, 'order_type', order_type )
             if coin == self.exchange.coin and order_type == SELL:
                 self.exchange.cancel_order(order['id'])
                 self.exchange.sell(amount_to_add, order_price)
-                print('replace sell')
             if coin == self.exchange.base and order_type == BUY:
                 self.exchange.cancel_order(order['id'])
                 self.exchange.buy(amount_to_add, order_price)
-                print('replace buy')
         if coin == self.exchange.coin:
             print('old reserve balance', self.ask_reserved_balance)
             update_merkato(self.mutex_UUID, 'ask_reserved_balance', float(old_reserves * (1 + add_percentage)))
