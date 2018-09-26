@@ -133,6 +133,7 @@ def decrypt_keys(config, password=None):
     private_key_decrypted = decrypt(password, private_key)
     config["public_api_key"]  = public_key_decrypted.decode('utf-8')
     config["private_api_key"] = private_key_decrypted.decode('utf-8')
+    print('config', config)
 
     return config
 
@@ -296,6 +297,7 @@ def create_new_merkato():
     merkato_args['spread'] = get_merkato_variable('spread', 'for 5% spread use .05')
     merkato_args['profit_margin'] = get_merkato_variable('profit margin')
     merkato_args['step'] = get_merkato_variable('step', 'for 5% step use "1.05"')
-    merkato_args['distribution_strategy'] = get_merkato_variable('distribution strategy', 'Input "1 for aggressive and "2" for neutral :')
+    merkato_args['distribution_strategy'] = get_merkato_variable('distribution strategy', 'Input "1 for aggressive, "2" for neutral, "3" for hyper aggro:')
+    merkato_args['increased_orders'] = get_merkato_variable('Increased Orders', 'SUGGESTED IS 1 or 2')
     Merkato(**merkato_args)
     return password

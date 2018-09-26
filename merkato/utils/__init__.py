@@ -9,6 +9,7 @@ import base64
 import time
 import getpass
 import math
+import os
 
 from decimal import *
 from cryptography.fernet import Fernet
@@ -89,7 +90,8 @@ def get_reserve_balance(type):
 
 def get_merkato_variable(type, extra_message=''):
     print("What {} should be used?".format(type))
-    print('MUST BE A NUMBER' + extra_message)
+    print('MUST BE A NUMBER')
+    print(extra_message)
     selection = float(input("Selection: "))
     return selection
 
@@ -159,7 +161,6 @@ def generate_complete_merkato_configs(merkato_objects):
         complete_config['quote_profit'] = merkato['quote_profit']
         complete_config['init_quote_balance'] = merkato['init_quote_balance']
         complete_config['init_base_balance'] = merkato['init_base_balance']
-        complete_config['unmade_stack'] = merkato['unmade_stack']
         merkato_complete_configs.append(complete_config)
     return merkato_complete_configs
 
@@ -310,3 +311,13 @@ def calculate_scaling_factor(scaling_log_factor, step, total_orders):
         current_order += 1
     
     return scaling_factor
+
+def calculate_remaining_reserve(total_reserve, orders_to_increase, step, scaling_factor):
+    current_order = 0
+    remaining_reserve = total_reserve
+    while current_order < orders_to_increase:
+        step_adjusted_factor = Decimal(step**current_order)
+        current_ask_amount = total_reserve/(scaling_factor * step_adjusted_factor) * Decimal(.5)
+        remaining_reserve -= current_ask_amount
+        current_order += 1
+    return remaining_reserve

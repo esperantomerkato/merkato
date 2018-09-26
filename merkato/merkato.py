@@ -14,7 +14,8 @@ from merkato.utils.database_utils import update_merkato, insert_merkato, merkato
     get_all_unmade_transactions
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
-    get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions
+    get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions, \
+    calculate_remaining_reserve
 
 log = logging.getLogger(__name__)
 getcontext().prec = 8
@@ -22,8 +23,8 @@ getcontext().prec = 8
 @log_all_methods
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread, bid_reserved_balance, ask_reserved_balance,
-                 user_interface=None, profit_margin=0, first_order='', starting_price=.018,
-                 step=1.0033, distribution_strategy=1, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0, unmade_stack=[] ):
+                 user_interface=None, profit_margin=0, first_order='', starting_price=.018, increased_orders = 0,
+                 step=1.0033, distribution_strategy=1, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0,):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
@@ -34,6 +35,7 @@ class Merkato(object):
         self.profit_margin = Decimal(profit_margin)
         self.starting_price = starting_price
         self.step = step
+        self.increased_orders = increased_orders
         self.quote_profit = Decimal(quote_profit)
         self.base_profit = Decimal(base_profit)
         # Exchanges have a maximum number of orders every user can place. Due
@@ -245,10 +247,14 @@ class Merkato(object):
         amount = 0
 
         prior_reserve = self.bid_reserved_balance
+        amount_for_main_orders = calculate_remaining_reserve(total_amount, self.increased_orders, step, scaling_factor)
         while current_order < total_orders:
             step_adjusted_factor = Decimal(step**current_order)
+            if current_order < self.increased_orders:
+                current_bid_total = Decimal(total_amount/(scaling_factor * step_adjusted_factor)) * Decimal(1.5)
+            else:
+                current_bid_total =  Decimal(Decimal(amount_for_main_orders)/(scaling_factor * step_adjusted_factor))
             current_bid_price = Decimal(start_price/step_adjusted_factor)
-            current_bid_total = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))
             current_bid_amount = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))/current_bid_price
             amount += current_bid_amount
             
@@ -305,7 +311,7 @@ class Merkato(object):
             return self.exchange.get_total_amount(orderid) # todo unimplemented on tux
 
 
-    def decaying_ask_ladder(self, total_amount, step, start_price):
+    def decaying_ask_ladder(self, total_amount, step, start_price, hyper=False):
         # Places an ask ladder from the start_price to 2x the start_price.
         # The last order in the ladder is half the amount of the first
         # order in the ladder. The amount allocated at each step decays as
@@ -320,9 +326,13 @@ class Merkato(object):
         amount = 0
 
         prior_reserve = self.ask_reserved_balance
+        amount_for_main_orders = calculate_remaining_reserve(total_amount, self.increased_orders, step, scaling_factor)
         while current_order < total_orders:
             step_adjusted_factor = Decimal(step**current_order)
-            current_ask_amount = total_amount/(scaling_factor * step_adjusted_factor)
+            if current_order < self.increased_orders:
+                current_ask_amount = total_amount/(scaling_factor * step_adjusted_factor) * Decimal(1.5)
+            else:
+                current_ask_amount = amount_for_main_orders /(scaling_factor * step_adjusted_factor)
             current_ask_price = start_price*step_adjusted_factor
             amount += current_ask_amount
 
