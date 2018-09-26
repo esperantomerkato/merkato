@@ -8,6 +8,7 @@ from merkato.utils.database_utils import get_exchange as get_exchange_from_db, g
 import base64
 import time
 import getpass
+import math
 
 from decimal import *
 from cryptography.fernet import Fernet
@@ -298,3 +299,14 @@ def log_new_cointrackr_transactions(newTransactionHistory, coin, base, name):
             writer.writerow(fieldnames)
         for tx in scrubbed_history:
             writer.writerow(tx)
+
+def calculate_scaling_factor(scaling_log_factor, step, total_orders):
+    scaling_factor = 0
+    current_order = 0
+    
+    # Calculate scaling factor
+    while current_order < total_orders:
+        scaling_factor += Decimal(1/(step**current_order))
+        current_order += 1
+    
+    return scaling_factor

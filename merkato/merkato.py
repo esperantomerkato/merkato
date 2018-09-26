@@ -13,7 +13,7 @@ from merkato.utils.database_utils import update_merkato, insert_merkato, merkato
     insert_unmade_transaction, unmade_transaction_exists, get_unmade_transaction, get_merkato, complete_unmade_transaction, \
     get_all_unmade_transactions
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
-    get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, \
+    get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
     get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions
 
 log = logging.getLogger(__name__)
@@ -237,15 +237,9 @@ class Merkato(object):
         '''
         # Abandon all hope, ye who enter here. This function uses black magic (math).
 
-        scaling_factor = 0
         scaling_log_factor = 2 if hyper == False else 1.5
         total_orders = floor(math.log(scaling_log_factor, step)) # 277 for a step of 1.0025
-        current_order = 0
-        
-        # Calculate scaling factor
-        while current_order < total_orders:
-            scaling_factor += Decimal(1/(step**current_order))
-            current_order += 1
+        scaling_factor = calculate_scaling_factor(scaling_log_factor, step, total_orders)
 
         current_order = 0
         amount = 0
@@ -318,15 +312,9 @@ class Merkato(object):
         # orders are placed.
         # Abandon all hope, ye who enter here. This function uses black magic (math).
 
-        scaling_factor = 0
         scaling_log_factor = 2 if hyper == False else 1.5
         total_orders = floor(math.log(scaling_log_factor, step)) # 277 for a step of 1.0025
-        current_order = 0
-
-        # Calculate scaling factor
-        while current_order < total_orders:
-            scaling_factor += Decimal(1/(step**current_order))
-            current_order += 1
+        scaling_factor = calculate_scaling_factor(scaling_log_factor, step, total_orders)
 
         current_order = 0
         amount = 0
