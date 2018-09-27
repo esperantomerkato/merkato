@@ -133,7 +133,6 @@ def decrypt_keys(config, password=None):
     private_key_decrypted = decrypt(password, private_key)
     config["public_api_key"]  = public_key_decrypted.decode('utf-8')
     config["private_api_key"] = private_key_decrypted.decode('utf-8')
-    print('config', config)
 
     return config
 

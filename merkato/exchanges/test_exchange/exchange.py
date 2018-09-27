@@ -134,7 +134,6 @@ class TestExchange(ExchangeBase):
         combined_orders.extend(my_filtered_asks)
         combined_orders.extend(my_filtered_bids)
 
-        #print('combined_orders', combined_orders)
         my_open_orders = {}
 
         for order in combined_orders:
