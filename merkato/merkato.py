@@ -14,7 +14,7 @@ from merkato.utils.database_utils import update_merkato, insert_merkato, merkato
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
     get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions, \
-    calculate_remaining_reserve
+    calculate_remaining_amount
 
 log = logging.getLogger(__name__)
 getcontext().prec = 8
@@ -246,15 +246,17 @@ class Merkato(object):
         amount = 0
 
         prior_reserve = self.bid_reserved_balance
-        amount_for_main_orders = calculate_remaining_reserve(total_amount, self.increased_orders, step, scaling_factor)
+        amount_for_main_orders = calculate_remaining_amount(total_amount, self.increased_orders, step, scaling_factor)
         while current_order < total_orders:
             step_adjusted_factor = Decimal(step**current_order)
+            current_bid_price = Decimal(start_price/step_adjusted_factor)
             if current_order < self.increased_orders:
                 current_bid_total = Decimal(total_amount/(scaling_factor * step_adjusted_factor)) * Decimal(1.5)
+                current_bid_amount = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))/current_bid_price * Decimal(1.5)
+                print('incresed', current_bid_total, 'current_bid_amount', current_bid_amount)
             else:
                 current_bid_total =  Decimal(Decimal(amount_for_main_orders)/(scaling_factor * step_adjusted_factor))
-            current_bid_price = Decimal(start_price/step_adjusted_factor)
-            current_bid_amount = Decimal(Decimal(total_amount)/(scaling_factor * step_adjusted_factor))/current_bid_price
+                current_bid_amount = Decimal(Decimal(amount_for_main_orders)/(scaling_factor * step_adjusted_factor))/current_bid_price
             amount += current_bid_amount
             
             # TODO Create lock
@@ -325,7 +327,7 @@ class Merkato(object):
         amount = 0
 
         prior_reserve = self.ask_reserved_balance
-        amount_for_main_orders = calculate_remaining_reserve(total_amount, self.increased_orders, step, scaling_factor)
+        amount_for_main_orders = calculate_remaining_amount(total_amount, self.increased_orders, step, scaling_factor)
         while current_order < total_orders:
             step_adjusted_factor = Decimal(step**current_order)
             if current_order < self.increased_orders:

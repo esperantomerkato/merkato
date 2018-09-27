@@ -297,6 +297,6 @@ def create_new_merkato():
     merkato_args['profit_margin'] = get_merkato_variable('profit margin')
     merkato_args['step'] = get_merkato_variable('step', 'for 5% step use "1.05"')
     merkato_args['distribution_strategy'] = get_merkato_variable('distribution strategy', 'Input "1 for aggressive, "2" for neutral, "3" for hyper aggro:')
-    merkato_args['increased_orders'] = get_merkato_variable('Increased Orders', 'SUGGESTED IS 1 or 2')
+    merkato_args['increased_orders'] = get_merkato_variable('Increased Orders', 'SUGGESTED IS 0, 1, or 2')
     Merkato(**merkato_args)
     return password

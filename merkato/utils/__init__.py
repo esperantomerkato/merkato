@@ -313,12 +313,13 @@ def calculate_scaling_factor(scaling_log_factor, step, total_orders):
     
     return scaling_factor
 
-def calculate_remaining_reserve(total_reserve, orders_to_increase, step, scaling_factor):
+def calculate_remaining_amount(initial_amount, orders_to_increase, step, scaling_factor):
     current_order = 0
-    remaining_reserve = total_reserve
+    remaining_amount = initial_amount
     while current_order < orders_to_increase:
         step_adjusted_factor = Decimal(step**current_order)
-        current_ask_amount = total_reserve/(scaling_factor * step_adjusted_factor) * Decimal(.5)
-        remaining_reserve -= current_ask_amount
+        current_ask_amount = initial_amount/(scaling_factor * step_adjusted_factor) * Decimal(.6)
+        remaining_amount -= current_ask_amount
         current_order += 1
-    return remaining_reserve
+    print('remaining', remaining_amount, 'totalreset', initial_amount)
+    return remaining_amount
