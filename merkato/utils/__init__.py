@@ -318,7 +318,7 @@ def calculate_remaining_amount(initial_amount, orders_to_increase, step, scaling
     remaining_amount = initial_amount
     while current_order < orders_to_increase:
         step_adjusted_factor = Decimal(step**current_order)
-        current_ask_amount = initial_amount/(scaling_factor * step_adjusted_factor) * Decimal(.6)
+        current_ask_amount = initial_amount/(scaling_factor * step_adjusted_factor) * Decimal(.62)
         remaining_amount -= current_ask_amount
         current_order += 1
     print('remaining', remaining_amount, 'totalreset', initial_amount)
