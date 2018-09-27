@@ -10,6 +10,7 @@ import time
 import getpass
 import math
 import os
+import csv
 
 from decimal import *
 from cryptography.fernet import Fernet
