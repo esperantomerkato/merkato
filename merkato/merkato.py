@@ -141,6 +141,14 @@ class Merkato(object):
 
             if tx[TYPE] == SELL:
                 buy_price = Decimal(price) * ( 1  - self.spread)
+                
+                # Convert from the coin amount into base at the executed price
+                base_amt = price*amount
+                # Convert the base amount into coin at the final price
+                coin_amt = base_amt/buy_price
+                # This is the actual number we want to apply, not the original executed amount.
+                amount = coin_amt
+
                 log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
 
                 market = self.exchange.buy(amount, buy_price)
