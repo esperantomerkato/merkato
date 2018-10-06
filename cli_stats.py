@@ -31,6 +31,8 @@ def main():
         initial_quote = float(merkato['init_quote_balance'])
 
         absolute_balances = exchange.get_balances()
+        current_used_quote = float(exchange.get_balance(merkato['alt'])['locked'])
+        current_used_base = float(exchange.get_balance(merkato['base'])['locked'])
         absolute_base = float(absolute_balances['base']['amount']['balance'])
         absolute_quote = float(absolute_balances['coin']['amount']['balance'])
 
@@ -39,8 +41,8 @@ def main():
 
         print('STATS FOR {}'.format(merkato['exchange_pair']))
         print('Initial Base: {} Initial Quote: {} '.format(initial_base, initial_quote))
-        print('Current Base: {} Current Quote: {}'.format(absolute_base, absolute_quote))
-        print('Absolute Base Diff: {} Absolute Quote Diff: {}'.format(absolute_base - initial_base, absolute_quote - initial_quote))
+        print('(INCLUDES UNUSED FUNDS) Current Base Total: {} Current Quote Total: {}'.format(absolute_base, absolute_quote))
+        print('(DOES NOT INCLUDE UNUSED FUNDS) Absolute Base Diff: {} Absolute Quote Diff: {}'.format(current_used_base - initial_base, current_used_quote - initial_quote))
         print('MarketMaking Base Profit: {} Quote Profit: {}'.format(base_profit, quote_profit))
 if __name__ == '__main__':
     main()
