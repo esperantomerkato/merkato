@@ -68,7 +68,7 @@ class Merkato(object):
             allocated_pair_balances = get_allocated_pair_balances(configuration['exchange'], base, coin)
             check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
 
-            insert_merkato(configuration[EXCHANGE], self.mutex_UUID, base, coin, spread, bid_reserved_balance, ask_reserved_balance, first_order, starting_price, init_base_balance=bid_reserved_balance, init_quote_balance=ask_reserved_balance)
+            insert_merkato(configuration[EXCHANGE], self.mutex_UUID, base, coin, spread, bid_reserved_balance, ask_reserved_balance, first_order, starting_price, init_base_balance=bid_reserved_balance, init_quote_balance=ask_reserved_balance, step=step)
             history = self.exchange.get_my_trade_history()
 
             log.debug('initial history: {}'.format(history))
