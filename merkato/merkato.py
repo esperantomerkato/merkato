@@ -143,7 +143,7 @@ class Merkato(object):
                 buy_price = Decimal(price) * ( 1  - self.spread)
                 
                 # Convert from the coin amount into base at the executed price
-                base_amt = price*amount
+                base_amt = Decimal(price)*amount
                 # Convert the base amount into coin at the final price
                 coin_amt = base_amt/buy_price
                 # This is the actual number we want to apply, not the original executed amount.
