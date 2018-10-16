@@ -556,3 +556,4 @@ def unmade_transaction_exists(UUID):
         conn.close()
 
         return result > 0
+
