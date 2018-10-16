@@ -9,7 +9,7 @@ from merkato.constants import EXCHANGE
 from merkato.merkato import Merkato
 from merkato.utils import update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato
 from binance.client import Client
-from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_monthly_info_table, drop_monthly_info_table
+from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_monthly_info_table, drop_monthly_info_table, get_all_monthyly_info
 import getpass
 import time
 
@@ -193,7 +193,7 @@ def process_start_option(option):
             return
 
         elif option == '6':
-            handle_change_spread()
+            handle_view_month_datas()
             return
         
         elif option == '7':
@@ -205,6 +205,24 @@ def process_start_option(option):
 
         else:
             return False
+
+def handle_view_month_datas():
+    monthly_infos = get_all_monthyly_info()
+    for info in monthly_infos:
+        merkato_name = info['exchange_pair']
+        human_time = time.strftime("%Z - %Y/%m/%d, %H:%M:%S", time.localtime(info['date']))
+        spread = info['spread']
+        step = info['step']
+        start_base = info['start_base']
+        start_quote = info['start_quote']
+        abs_base_profit = info['end_base'] - info['start_base']
+        abs_quote_profit = info['end_quote'] - info['start_quote']
+        overall_profit = abs_base_profit + (abs_quote_profit * info['last_price'])
+        print('Monthly Data for {} at {}'.format(merkato_name, human_time))
+        print('Spread: {} Step: {} Start Base: {} Start Quote: {}'.format(spread, step, start_base, start_quote))
+        print('MM profit -> base: {} quote: {}'.format(info['mm_base_profit'], info['mm_quote_profit']))
+        print('ABS crypto profit base: {} quote: {} overall: {} (Denom in base)'.format(abs_base_profit, abs_quote_profit, overall_profit))
+        print('USD Value: {}'.format(info['ending_usd_val']))
 
 def update_monthly_datas():
     merkatos = get_all_merkatos()
@@ -227,6 +245,7 @@ def generate_complete_monthly_data(merkato):
     monthly_data['last_price'] = float(exchange.get_last_trade_price())
     monthly_data['base_volume'] = 0
     monthly_data['quote_volume'] = 0
+    monthly_data['date'] = round(time.time())
     insert_monthly_info (**monthly_data)
 
 def add_balances_to_data(data, balances):

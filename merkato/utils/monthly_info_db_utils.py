@@ -27,7 +27,7 @@ def create_monthly_info_table():
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS monthly_info
                     (exchange_pair text, spread float, step float, start_base float, start_quote float, end_base float, end_quote float, 
-                    mm_base_profit float, mm_quote_profit float, ending_usd_val float, last_price float, base_volume float, quote_volume float)''')
+                    mm_base_profit float, mm_quote_profit float, ending_usd_val float, last_price float, base_volume float, quote_volume float, date int)''')
         conn.commit()
         conn.close()
 
@@ -52,7 +52,7 @@ def no_monthly_info_table_exists():
 
 
 def insert_monthly_info(exchange_pair='tuxBTC_ETH', spread='.1', last_price=.018, step=1.0033, start_base=0, start_quote=0, 
-    end_base=0, end_quote=0, mm_base_profit=0, mm_quote_profit=0, ending_usd_val=0, base_volume=0, quote_volume=0):
+    end_base=0, end_quote=0, mm_base_profit=0, mm_quote_profit=0, ending_usd_val=0, base_volume=0, quote_volume=0, date=0):
     ''' TODO: Function Comment
     '''
     try:
@@ -64,8 +64,8 @@ def insert_monthly_info(exchange_pair='tuxBTC_ETH', spread='.1', last_price=.018
     finally:
         c = conn.cursor()
         c.execute("""INSERT INTO monthly_info 
-                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, ending_usd_val, last_price, base_volume, quote_volume) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, ending_usd_val, last_price, base_volume, quote_volume))
+                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, ending_usd_val, last_price, base_volume, quote_volume, date) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, ending_usd_val, last_price, base_volume, quote_volume, date))
         conn.commit()
         conn.close()
 
@@ -115,12 +115,12 @@ def get_all_monthyly_info():
 
     finally:
         c = conn.cursor()
-        c.execute("SELECT * FROM monthly_info")
-        all_merkatos = c.fetchall()
+        c.execute("SELECT * FROM monthly_info ORDER BY date ASC")
+        monthly_infos = c.fetchall()
         conn.commit()
         conn.close()
 
-        return all_merkatos
+        return monthly_infos
 
 def dict_factory(cursor, row):
     ''' TODO: Function Comment
