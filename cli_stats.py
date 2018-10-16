@@ -2,7 +2,7 @@ from merkato.merkato_config import load_config, get_config, create_exchange
 from merkato.merkato import Merkato
 from merkato.parser import parse
 from merkato.utils.database_utils import no_merkatos_table_exists, create_merkatos_table, insert_merkato, get_all_merkatos, get_exchange, no_exchanges_table_exists, create_exchanges_table, drop_merkatos_table
-from merkato.utils import generate_complete_merkato_configs, get_relevant_exchange
+from merkato.utils import generate_complete_merkato_configs, get_relevant_exchange, load_exchange_by_merkato
 import sqlite3
 import time
 import pprint
@@ -21,12 +21,7 @@ def main():
 
     merkatos = get_all_merkatos()
     for merkato in merkatos:
-        exchange_name = merkato['exchange']
-        exchange_class = get_relevant_exchange(exchange_name)
-        # round_trip_fee = round_trip_exchange_fees[exchange_name]
-        config = load_config(exchange_name)
-        exchange = exchange_class(config, merkato['alt'], merkato['base'])
-        # spread = merkato['spread']
+        exchange = load_exchange_by_merkato(merkato)
         initial_base = float(merkato['init_base_balance'])
         initial_quote = float(merkato['init_quote_balance'])
 
@@ -44,5 +39,7 @@ def main():
         print('(INCLUDES UNUSED FUNDS) Current Base Total: {} Current Quote Total: {}'.format(absolute_base, absolute_quote))
         print('(DOES NOT INCLUDE UNUSED FUNDS) Absolute Base Diff: {} Absolute Quote Diff: {}'.format(current_used_base - initial_base, current_used_quote - initial_quote))
         print('MarketMaking Base Profit: {} Quote Profit: {}'.format(base_profit, quote_profit))
+
+
 if __name__ == '__main__':
     main()

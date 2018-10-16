@@ -7,7 +7,9 @@ from merkato.exchanges.tux_exchange.utils import validate_credentials
 from merkato.exchanges.binance_exchange.utils import validate_keys
 from merkato.constants import EXCHANGE
 from merkato.merkato import Merkato
-from merkato.utils import update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable
+from merkato.utils import update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato
+from binance.client import Client
+from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_monthly_info_table, drop_monthly_info_table
 import getpass
 import time
 
@@ -193,12 +195,52 @@ def process_start_option(option):
         elif option == '6':
             handle_change_spread()
             return
-
+        
         elif option == '7':
+            update_monthly_datas()
+            return
+
+        elif option == '8':
             return False
 
         else:
             return False
+
+def update_monthly_datas():
+    merkatos = get_all_merkatos()
+    for merkato in merkatos:
+        generate_complete_monthly_data(merkato)
+
+def generate_complete_monthly_data(merkato):
+    monthly_data = {}
+    monthly_data['spread'] = merkato['spread']
+    monthly_data['step'] = merkato['step']
+    monthly_data['mm_base_profit'] = merkato['base_profit']
+    monthly_data['mm_quote_profit'] = merkato['quote_profit']
+    monthly_data['start_quote'] = merkato['init_quote_balance']
+    monthly_data['start_base'] = merkato['init_base_balance']
+    exchange = load_exchange_by_merkato(merkato)
+    
+    absolute_balances = exchange.get_balances()
+    add_balances_to_data(monthly_data, absolute_balances)
+    add_usd_values(merkato, monthly_data)
+    monthly_data['last_price'] = float(exchange.get_last_trade_price())
+    monthly_data['base_volume'] = 0
+    monthly_data['quote_volume'] = 0
+    insert_monthly_info (**monthly_data)
+
+def add_balances_to_data(data, balances):
+    absolute_base = float(balances['base']['amount']['balance'])
+    absolute_quote = float(balances['coin']['amount']['balance'])
+    data['end_base'] = absolute_base
+    data['end_quote'] = absolute_quote
+
+def add_usd_values(merkato, monthly_data):
+    client = Client('', '')
+    base_price = float(client.get_ticker(symbol=merkato['base'] + 'USDT')["lastPrice"])
+    quote_price = float(client.get_ticker(symbol=merkato['alt'] + merkato['base'])["lastPrice"]) * base_price
+    monthly_data['ending_usd_val'] = monthly_data['end_base'] * base_price
+    monthly_data['ending_usd_val'] += monthly_data['end_quote'] * quote_price
 
 def handle_change_spread():
     merkatos = get_all_merkatos()
@@ -234,6 +276,11 @@ def handle_drop_selection():
     if should_drop_exchanges == 'y':
         drop_exchanges_table()
         create_exchanges_table()
+
+    should_drop_monthly_info = input('Do you want to drop monthly info? y/n: ')
+    if should_drop_monthly_info == 'y':
+        drop_monthly_info_table()
+        create_monthly_info_table()
 
 def handle_add_asset():
     merkatos = get_all_merkatos()

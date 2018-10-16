@@ -9,7 +9,7 @@ def drop_monthly_info_table():
         
     finally:
         c = conn.cursor()
-        c.execute('''DROP TABLE profit''')
+        c.execute('''DROP TABLE monthly_info''')
         conn.commit()
         conn.close()
 
@@ -27,7 +27,7 @@ def create_monthly_info_table():
         c = conn.cursor()
         c.execute('''CREATE TABLE IF NOT EXISTS monthly_info
                     (exchange_pair text, spread float, step float, start_base float, start_quote float, end_base float, end_quote float, 
-                    mm_base_profit float, mm_quote_profit float, starting_usd_val float, ending_usd_val float, last_price float, base_volume float, quote_volume float)''')
+                    mm_base_profit float, mm_quote_profit float, ending_usd_val float, last_price float, base_volume float, quote_volume float)''')
         conn.commit()
         conn.close()
 
@@ -52,7 +52,7 @@ def no_monthly_info_table_exists():
 
 
 def insert_monthly_info(exchange_pair='tuxBTC_ETH', spread='.1', last_price=.018, step=1.0033, start_base=0, start_quote=0, 
-    end_base=0, end_quote=0, mm_base_profit=0, mm_quote_profit=0, starting_usd_val=0, ending_usd_val=0, base_volume=0, quote_volume=0):
+    end_base=0, end_quote=0, mm_base_profit=0, mm_quote_profit=0, ending_usd_val=0, base_volume=0, quote_volume=0):
     ''' TODO: Function Comment
     '''
     try:
@@ -64,8 +64,8 @@ def insert_monthly_info(exchange_pair='tuxBTC_ETH', spread='.1', last_price=.018
     finally:
         c = conn.cursor()
         c.execute("""INSERT INTO monthly_info 
-                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, starting_usd_val, ending_usd_val, last_price, base_volume, quote_volume) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, starting_usd_val, ending_usd_val, last_price, base_volume, quote_volume))
+                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, ending_usd_val, last_price, base_volume, quote_volume) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                    (exchange_pair, spread, step, start_base, start_quote, end_base, end_quote, mm_base_profit, mm_quote_profit, ending_usd_val, last_price, base_volume, quote_volume))
         conn.commit()
         conn.close()
 

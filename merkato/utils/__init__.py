@@ -5,10 +5,10 @@ from merkato.exchanges.tux_exchange.exchange import TuxExchange
 from merkato.exchanges.binance_exchange.exchange import BinanceExchange
 from merkato.constants import known_exchanges, known_assets
 from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato, update_merkato
+from merkato import merkato_config
 import base64
 import time
 import getpass
-import math
 import os
 import csv
 
@@ -112,8 +112,9 @@ def get_start_option():
     print("3 -> Add merkato (Requires existing exchanges)")
     print("4 -> Drop tables")
     print("5 -> Add asset to a Merkato")
-    print("6 -> change spread of a Merkato")
-    print("7 -> Exit")
+    print("6 -> Change spread of a Merkato")
+    print("7 -> Update all merkatos monthly_data")
+    print("8 -> Exit")
     return input("Selection: ")
 
 def create_price_data(orders, order):
@@ -323,3 +324,11 @@ def calculate_remaining_amount(initial_amount, orders_to_increase, step, scaling
         current_order += 1
     print('remaining', remaining_amount, 'totalreset', initial_amount)
     return remaining_amount
+
+def load_exchange_by_merkato(merkato):
+    exchange_name = merkato['exchange']
+    exchange_class = get_relevant_exchange(exchange_name)
+    config = merkato_config.load_config(exchange_name)
+    exchange = exchange_class(config, merkato['alt'], merkato['base'])
+    return exchange
+
