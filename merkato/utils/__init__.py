@@ -166,10 +166,6 @@ def generate_complete_merkato_configs(merkato_objects):
         merkato_complete_configs.append(complete_config)
     return merkato_complete_configs
 
-def update_unmade_stack(stack, merkato_uuid):
-    string_stack = json.dumps(stack)
-    update_merkato(merkato_uuid, 'unmade_stack', string_stack)
-
 def get_allocated_pair_balances(exchange, base, coin):
     allocated_pair_balances = {
         'base': Decimal(0),

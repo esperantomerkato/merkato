@@ -8,9 +8,7 @@ import logging
 from decimal import *
 from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
     ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, BASE_PROFIT, QUOTE_PROFIT, INIT_BASE_BALANCE, INIT_QUOTE_BALANCE
-from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, insert_transaction, \
-    insert_unmade_transaction, unmade_transaction_exists, get_unmade_transaction, get_merkato, complete_unmade_transaction, \
-    get_all_unmade_transactions
+from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, get_merkato
 from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
     get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions, \
@@ -115,8 +113,6 @@ class Merkato(object):
             orderid = tx['orderId']
             tx_id   = tx[ID]
             price   = tx[PRICE]
-            unmade_tx_id = self.mutex_UUID + str(price) + str(orderid)
-            is_unmade_transaction = unmade_transaction_exists(unmade_tx_id)
             
             filled_amount = Decimal(tx['amount'])
             init_amount   = Decimal(tx['initamount'])
@@ -162,19 +158,9 @@ class Merkato(object):
 
                 is_round_trip = float(price) <= (float(self.starting_price) * float(1+(self.spread/2)))
                 if is_round_trip:
-                    if is_unmade_transaction:
-                        print('is unmade transaction')
-                        unmade_tx = get_unmade_transaction(unmade_tx_id)
-                        avg_spread = (unmade_tx['old_spread'] + unmade_tx['new_spread'])/2
-                        profit = amount * (avg_spread - self.exchange.fee)
-                        old_profit = get_merkato(self.mutex_UUID)[BASE_PROFIT]
-                        print('old p', old_profit, 'p', profit, 'avg_spread', avg_spread, 'unmade_tx', unmade_tx)
-                        update_merkato(self.mutex_UUID, BASE_PROFIT, float(profit + old_profit))
-                        complete_unmade_transaction(unmade_tx_id)
-                    else:
-                        log.info('Is round trip sell price: {}'.format(price))
-                        self.base_profit += total_amount * Decimal(float(price)) * (self.spread - Decimal(self.exchange.fee *2))
-                        update_merkato(self.mutex_UUID, BASE_PROFIT, float(self.base_profit))
+                    log.info('Is round trip sell price: {}'.format(price))
+                    self.base_profit += total_amount * Decimal(float(price)) * (self.spread - Decimal(self.exchange.fee *2))
+                    update_merkato(self.mutex_UUID, BASE_PROFIT, float(self.base_profit))
                     
 
             if tx[TYPE] == BUY:
@@ -192,19 +178,10 @@ class Merkato(object):
 
                 is_round_trip = float(price) >= (float(self.starting_price) * float(1-(self.spread/2)))
                 if is_round_trip:
-                    if is_unmade_transaction:
-                        unmade_tx = get_unmade_transaction(unmade_tx_id)
-                        avg_spread = (unmade_tx['old_spread'] + unmade_tx['new_spread'])/2
-                        profit = amount * (avg_spread - self.exchange.fee)
-                        old_profit = get_merkato(self.mutex_UUID)[QUOTE_PROFIT]
-                        update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(profit + old_profit))
-                        complete_unmade_transaction(unmade_tx_id)
-                    else:
-                        log.info('Is round trip buy price: {}'.format(price))
-                        self.quote_profit += total_amount * Decimal(self.spread - Decimal(self.exchange.fee *2))
-                        update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(self.quote_profit))
+                    log.info('Is round trip buy price: {}'.format(price))
+                    self.quote_profit += total_amount * Decimal(self.spread - Decimal(self.exchange.fee *2))
+                    update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(self.quote_profit))
 
-            insert_transaction(self.mutex_UUID, self.exchange.base, self.exchange.coin, float(self.spread), tx_id, orderid, float(price), float(filled_amount), tx['time'])
 
             if market != MARKET: 
                 log.info('NOT MARKET ORDER')
@@ -645,34 +622,3 @@ class Merkato(object):
         bid_reserved_balance = self.bid_reserved_balance + amoount_to_add if coin == 'BTC' else self.bid_reserved_balance
         print('ask_reserved_balance', ask_reserved_balance, 'bid_reserved_balance', bid_reserved_balance)
         check_reserve_balances(total_pair_balances, allocated_pair_balances, coin_reserve=ask_reserved_balance, base_reserve=bid_reserved_balance)
-
-    def translate_spread(self, new_spread):
-        new_spread = float(new_spread)
-        current_orders = self.exchange.get_my_open_orders()
-        for order_id, order in current_orders.items():
-            print('order', order)
-            current_amount = float(order['amount'])
-            order_type = order['type']
-            order_price = float(order['price'])
-            old_unmade_id = self.mutex_UUID + str(order_price) + str(order_id)
-            spread_factor = (float(self.spread) - new_spread)/2
-            if order_type == SELL:
-                new_price = order_price * (1 + spread_factor) 
-                self.exchange.cancel_order(order['id'])
-                new_order_id = self.exchange.sell(current_amount, new_price)['orderId']
-                print('replace sell newprice: {} oldprice:{}'.format(new_price, order_price))
-            if order_type == BUY:
-                new_price = order_price * (1 - spread_factor)   
-                self.exchange.cancel_order(order['id'])
-                new_order_id = self.exchange.buy(current_amount, new_price)['orderId']
-                print('replace buy newprice: {} oldprice:{}'.format(new_price, old_price))
-            if unmade_transaction_exists(old_unmade_id):
-                old_unmade_tx = get_unmade_transaction(old_unmade_id)
-                old_unmade_tx['order_id'] = new_order_id
-                old_unmade_tx['new_spread'] = new_spread
-                old_unmade_tx['uuid'] = self.mutex_UUID + str(order_price) + str(order_id)
-                insert_unmade_transaction(old_unmade_tx)
-        self.spread = Decimal(new_spread)
-        update_merkato(self.mutex_UUID, 'spread', float(self.spread))
-        print('new spread', self.spread)
-        print('get_all_unmade_transactions', get_all_unmade_transactions())

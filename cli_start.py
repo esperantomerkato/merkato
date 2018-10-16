@@ -2,8 +2,7 @@ from merkato.merkato_config import load_config, get_config, create_exchange, pro
 from merkato.merkato import Merkato
 from merkato.parser import parse
 from merkato.utils.database_utils import no_merkatos_table_exists, create_merkatos_table,\
-     no_exchanges_table_exists, create_exchanges_table, no_transactions_table_exists, \
-     create_transactions_table, no_unmade_transactions_table_exists, create_unmade_transactions
+     no_exchanges_table_exists, create_exchanges_table
 from merkato.utils import generate_complete_merkato_configs, get_start_option
 from merkato.utils.monthly_info_db_utils import no_monthly_info_table_exists, create_monthly_info_table
 import sqlite3
@@ -13,10 +12,6 @@ import pprint
 def main():
     print("Merkato Alpha v0.1.1\n")
 
-    if no_unmade_transactions_table_exists():
-        create_unmade_transactions()
-    if no_transactions_table_exists():
-        create_transactions_table()
     if no_merkatos_table_exists():
         create_merkatos_table()
     if no_exchanges_table_exists():
