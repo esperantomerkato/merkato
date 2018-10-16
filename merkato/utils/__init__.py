@@ -112,7 +112,7 @@ def get_start_option():
     print("3 -> Add merkato (Requires existing exchanges)")
     print("4 -> Drop tables")
     print("5 -> Add asset to a Merkato")
-    print("6 -> Change spread of a Merkato")
+    print("6 -> Save current data to monthly_data")
     print("7 -> Update all merkatos monthly_data")
     print("8 -> Exit")
     return input("Selection: ")
