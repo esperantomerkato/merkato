@@ -1,8 +1,8 @@
-from merkato.merkato_config import load_config, get_config, create_exchange
+from merkato.merkato_config import get_config, create_exchange
 from merkato.merkato import Merkato
 from merkato.parser import parse
 from merkato.utils.database_utils import no_merkatos_table_exists, create_merkatos_table, insert_merkato, get_all_merkatos, get_exchange, no_exchanges_table_exists, create_exchanges_table, drop_merkatos_table, drop_exchanges_table, insert_exchange
-from merkato.utils import generate_complete_merkato_configs, ensure_bytes, encrypt, decrypt
+from merkato.utils import generate_complete_merkato_configs, ensure_bytes, encrypt, decrypt, load_config
 from merkato.exchanges.tux_exchange.utils import validate_credentials
 from merkato.exchanges.binance_exchange.utils import validate_keys
 from gui.simple_app import enter_password

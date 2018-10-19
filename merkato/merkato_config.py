@@ -6,22 +6,12 @@ from merkato.utils.database_utils import get_exchange,insert_exchange, no_exchan
 from merkato.exchanges.tux_exchange.utils import validate_credentials
 from merkato.exchanges.binance_exchange.utils import validate_keys
 from merkato.constants import EXCHANGE
-from merkato.merkato import Merkato
-from merkato.utils import update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato
+from merkato import merkato as main_merkato
+from merkato.utils import load_config, decrypt_keys, update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato
 from binance.client import Client
 from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_monthly_info_table, drop_monthly_info_table, get_all_monthyly_info
 import getpass
 import time
-
-def load_config(exchange_name=None):
-    # Loads an existing configuration file
-    # Returns a dictionary
-    if exchange_name == None:
-        exchange_name = input("what is the exchange name? ")
-    exchange = get_exchange_from_db(exchange_name)
-    decrypt_keys(exchange)
-    return exchange
-    # TODO: Error handling and config validation
 
 
 def insert_config_into_exchanges(config):
@@ -112,30 +102,6 @@ def encrypt_keys(config, password=None):
     private_key_encrypted = encrypt(password, private_key)
     config["public_api_key"]  = public_key_encrypted
     config["private_api_key"] = private_key_encrypted
-    return config
-
-
-def decrypt_keys(config, password=None):
-    ''' Decrypts the API keys before storing the config in the database
-    '''
-    public_key  = config["public_api_key"]
-    private_key = config["private_api_key"]
-
-    if password is None:
-        password = getpass.getpass("\n\ndatabase password:") # Prompt user for password / get password from Nasa. This should be a popup?
-
-    password, public_key, private_key = ensure_bytes(password, public_key, private_key)
-
-    # decrypt(password, data)
-    # Inputs are of type:
-    # - password: bytes
-    # - data:     bytes
-
-    public_key_decrypted  = decrypt(password, public_key)
-    private_key_decrypted = decrypt(password, private_key)
-    config["public_api_key"]  = public_key_decrypted.decode('utf-8')
-    config["private_api_key"] = private_key_decrypted.decode('utf-8')
-
     return config
 
 def decrypt_merkato(merkato, password=None):
@@ -301,7 +267,7 @@ def handle_add_asset():
 
         password = getpass.getpass('Enter password for merkato: ')
         decrypt_keys(config=complete_config['configuration'], password=password)
-        merkato = Merkato(**complete_config)
+        merkato = merkato.Merkato(**complete_config)
         merkato.update_orders(asset_to_add, amount_to_add)
     else:
         handle_add_asset()
@@ -317,7 +283,7 @@ def start_merkatos(password=None):
 
     for complete_config in complete_merkato_configs:
         decrypt_keys(config=complete_config['configuration'], password=password)
-        merkato = Merkato(**complete_config)
+        merkato = main_merkato.Merkato(**complete_config)
         initialized_merkatos.append(merkato)
 
     while True:

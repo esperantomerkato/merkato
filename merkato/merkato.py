@@ -9,10 +9,10 @@ from decimal import *
 from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
     ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, BASE_PROFIT, QUOTE_PROFIT, INIT_BASE_BALANCE, INIT_QUOTE_BALANCE
 from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, get_merkato
-from merkato.utils import create_price_data, validate_merkato_initialization, get_relevant_exchange, \
+from merkato.utils import validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
     get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions, \
-    calculate_remaining_amount
+    calculate_remaining_amount, create_price_data
 
 log = logging.getLogger(__name__)
 getcontext().prec = 8

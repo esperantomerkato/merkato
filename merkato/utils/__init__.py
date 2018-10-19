@@ -5,7 +5,6 @@ from merkato.exchanges.tux_exchange.exchange import TuxExchange
 from merkato.exchanges.binance_exchange.exchange import BinanceExchange
 from merkato.constants import known_exchanges, known_assets
 from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato, update_merkato
-from merkato import merkato_config
 import base64
 import time
 import getpass
@@ -324,7 +323,39 @@ def calculate_remaining_amount(initial_amount, orders_to_increase, step, scaling
 def load_exchange_by_merkato(merkato):
     exchange_name = merkato['exchange']
     exchange_class = get_relevant_exchange(exchange_name)
-    config = merkato_config.load_config(exchange_name)
+    config = load_config(exchange_name)
     exchange = exchange_class(config, merkato['alt'], merkato['base'])
     return exchange
 
+def load_config(exchange_name=None):
+    # Loads an existing configuration file
+    # Returns a dictionary
+    if exchange_name == None:
+        exchange_name = input("what is the exchange name? ")
+    exchange = get_exchange_from_db(exchange_name)
+    decrypt_keys(exchange)
+    return exchange
+    # TODO: Error handling and config validation
+
+def decrypt_keys(config, password=None):
+    ''' Decrypts the API keys before storing the config in the database
+    '''
+    public_key  = config["public_api_key"]
+    private_key = config["private_api_key"]
+
+    if password is None:
+        password = getpass.getpass("\n\ndatabase password:") # Prompt user for password / get password from Nasa. This should be a popup?
+
+    password, public_key, private_key = ensure_bytes(password, public_key, private_key)
+
+    # decrypt(password, data)
+    # Inputs are of type:
+    # - password: bytes
+    # - data:     bytes
+
+    public_key_decrypted  = decrypt(password, public_key)
+    private_key_decrypted = decrypt(password, private_key)
+    config["public_api_key"]  = public_key_decrypted.decode('utf-8')
+    config["private_api_key"] = private_key_decrypted.decode('utf-8')
+
+    return config
