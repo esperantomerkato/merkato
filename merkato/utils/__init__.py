@@ -359,3 +359,9 @@ def decrypt_keys(config, password=None):
     config["private_api_key"] = private_key_decrypted.decode('utf-8')
 
     return config
+
+def log_transaction_message(message):
+    log = logging.getLogger(__name__)
+    f = open("tx_logs.txt", "a")
+    f.write(message + '\n')
+    log.info(message)

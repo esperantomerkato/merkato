@@ -12,7 +12,7 @@ from merkato.utils.database_utils import update_merkato, insert_merkato, merkato
 from merkato.utils import validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
     get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions, \
-    calculate_remaining_amount, create_price_data
+    calculate_remaining_amount, create_price_data, log_transaction_message
 
 log = logging.getLogger(__name__)
 getcontext().prec = 8
@@ -100,7 +100,7 @@ class Merkato(object):
         factor = self.spread*self.profit_margin/2
         ordered_transactions = new_txes
 
-        log.info('ordered transactions rebalanced: {}'.format(ordered_transactions))
+        log_transaction_message('ordered transactions rebalanced: {}'.format(ordered_transactions))
 
         filled_orders = []
         market_orders = []
@@ -109,7 +109,7 @@ class Merkato(object):
             self.exchange.process_new_transactions(ordered_transactions)
 
         for tx in ordered_transactions:
-            log.info('Checking Transaction: {}\n'.format(tx))
+            log_transaction_message('Checking Transaction: {}\n'.format(tx))
             orderid = tx['orderId']
             tx_id   = tx[ID]
             price   = tx[PRICE]
@@ -145,20 +145,20 @@ class Merkato(object):
                 # This is the actual number we want to apply, not the original executed amount.
                 amount = coin_amt
 
-                log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
+                log_transaction_message("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
 
                 market = self.exchange.buy(amount, buy_price)
                 # A lock is probably needed somewhere near here in case of unexpected shutdowns
 
                 if market == MARKET:
-                    log.info('MARKET ORDER buy {}'.format(market))
+                    log_transaction_message('MARKET ORDER buy {}'.format(market))
                     market_orders.append((amount, buy_price, BUY, tx_id,))
 
                 self.apply_filled_difference(tx, total_amount)
 
                 is_round_trip = float(price) <= (float(self.starting_price) * float(1+(self.spread/2)))
                 if is_round_trip:
-                    log.info('Is round trip sell price: {}'.format(price))
+                    log_transaction_message('Is round trip sell price: {}'.format(price))
                     self.base_profit += total_amount * Decimal(float(price)) * (self.spread - Decimal(self.exchange.fee *2))
                     update_merkato(self.mutex_UUID, BASE_PROFIT, float(self.base_profit))
                     
@@ -166,25 +166,25 @@ class Merkato(object):
             if tx[TYPE] == BUY:
                 sell_price = Decimal(price) * ( 1  + self.spread)
 
-                log.info("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
+                log_transaction_message("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
 
                 market = self.exchange.sell(amount, sell_price)
                 
                 if market == MARKET:
-                    log.info('MARKET ORDER sell {}'.format(market))
+                    log_transaction_message('MARKET ORDER sell {}'.format(market))
                     market_orders.append((amount, sell_price, SELL, tx_id))
 
                 self.apply_filled_difference(tx, total_amount)
 
                 is_round_trip = float(price) >= (float(self.starting_price) * float(1-(self.spread/2)))
                 if is_round_trip:
-                    log.info('Is round trip buy price: {}'.format(price))
+                    log_transaction_message('Is round trip buy price: {}'.format(price))
                     self.quote_profit += total_amount * Decimal(self.spread - Decimal(self.exchange.fee *2))
                     update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(self.quote_profit))
 
 
             if market != MARKET: 
-                log.info('NOT MARKET ORDER')
+                log_transaction_message('NOT MARKET ORDER')
                 update_merkato(self.mutex_UUID, LAST_ORDER, tx[ID])
 
             filled_orders.append(orderid)
@@ -199,7 +199,7 @@ class Merkato(object):
             self.handle_market_order(*order)
 
         log_new_cointrackr_transactions(ordered_transactions, self.exchange.coin, self.exchange.base, self.exchange.name)
-        log.info('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
+        log_transaction_message('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
         return ordered_transactions
 
 
@@ -478,8 +478,8 @@ class Merkato(object):
         new_transactions = []
         
         if len(new_history) > 0:
-            log.info('we have new history')
-            log.debug("New transactions: {} \n".format(new_history))
+            log_transaction_message('we have new history')
+            log_transaction_message("New transactions: {} \n".format(new_history))
 
             new_transactions = self.rebalance_orders(new_history)
             #self.merge_orders()
