@@ -6,6 +6,7 @@ from merkato.utils.database_utils import get_exchange,insert_exchange, no_exchan
 from merkato.exchanges.tux_exchange.utils import validate_credentials
 from merkato.exchanges.binance_exchange.utils import validate_keys
 from merkato.constants import EXCHANGE
+from merkato.merkato import Merkato
 from merkato import merkato as main_merkato
 from merkato.utils import load_config, decrypt_keys, update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato
 from binance.client import Client
