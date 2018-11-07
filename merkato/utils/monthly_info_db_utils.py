@@ -52,7 +52,7 @@ def no_monthly_info_table_exists():
 
 
 def insert_monthly_info(exchange_pair='binaBTC_XMR', spread='.1', last_price=.018, step=1.0033, start_base=0, start_quote=0, 
-    end_base=0, end_quote=0, mm_base_profit=0, mm_quote_profit=0, ending_usd_val=0, base_volume=0, quote_volume=0, date=0):
+    end_base=0, end_quote=0, mm_base_profit=0, mm_quote_profit=0, ending_usd_val=0, base_volume=0, quote_volume=0, date=0, quote_price=0):
     ''' TODO: Function Comment
     '''
     try:
