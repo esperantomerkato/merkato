@@ -211,13 +211,13 @@ def generate_complete_monthly_data(merkato):
     
     absolute_balances = exchange.get_balances()
     (absolute_base, absolute_quote) = get_current_balances(monthly_data, absolute_balances)
-    add_usd_values(merkato, monthly_data)
     monthly_data['last_price'] = float(exchange.get_last_trade_price())
     monthly_data['base_volume'] = merkato['buy_volume']
     monthly_data['quote_volume'] = merkato['sell_volume']
     monthly_data['end_base'] = absolute_base
     monthly_data['end_quote'] = absolute_quote
     monthly_data['date'] = round(time.time())
+    add_usd_values(merkato, monthly_data)
     insert_monthly_info (**monthly_data)
     reset_merkato_metrics(merkato, absolute_base, absolute_quote)
 
