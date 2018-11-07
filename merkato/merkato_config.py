@@ -185,11 +185,11 @@ def handle_view_month_datas():
         abs_base_profit = info['end_base'] - info['start_base']
         abs_quote_profit = info['end_quote'] - info['start_quote']
         overall_profit = abs_base_profit + (abs_quote_profit * info['last_price'])
-        relative_profit = overall_profit/ (start_base + (start_quote * info['last_price']))
+        relative_profit = (overall_profit/ (start_base + (start_quote * info['last_price']))) * 100
         print('Monthly Data for {} at {}'.format(merkato_name, human_time))
         print('Spread: {} Step: {} Start Base: {} Start Quote: {}'.format(spread, step, start_base, start_quote))
         print('MM profit -> base: {} quote: {}'.format(info['mm_base_profit'], info['mm_quote_profit']))
-        print('ABS crypto profit base: {} quote: {} overall: {} (Denom in base) relative: {}'.format(abs_base_profit, abs_quote_profit, overall_profit, relative_profit))
+        print('ABS crypto profit base: {} quote: {} overall: {} (Denom in base) relative: {}%'.format(abs_base_profit, abs_quote_profit, overall_profit, relative_profit))
         print('Volume base: {} quote: {}'.format(info['base_volume'], info['quote_volume']))
         print('USD Value: {}'.format(info['ending_usd_val']))
 
@@ -210,14 +210,16 @@ def generate_complete_monthly_data(merkato):
     exchange = load_exchange_by_merkato(merkato)
     
     absolute_balances = exchange.get_balances()
-    (base, quote) = get_current_balances(monthly_data, absolute_balances)
+    (absolute_base, absolute_quote) = get_current_balances(monthly_data, absolute_balances)
     add_usd_values(merkato, monthly_data)
     monthly_data['last_price'] = float(exchange.get_last_trade_price())
     monthly_data['base_volume'] = merkato['buy_volume']
     monthly_data['quote_volume'] = merkato['sell_volume']
+    monthly_data['end_base'] = absolute_base
+    monthly_data['end_quote'] = absolute_quote
     monthly_data['date'] = round(time.time())
     insert_monthly_info (**monthly_data)
-    reset_merkato_metrics(merkato, base, quote)
+    reset_merkato_metrics(merkato, absolute_base, absolute_quote)
 
 def update_merkato_metrics(merkato, base_balance, quote_balance):
     UUID = merkato['exchange_pair']
