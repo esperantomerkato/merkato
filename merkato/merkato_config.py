@@ -14,6 +14,8 @@ from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_mont
 import getpass
 import time
 
+BOLD_BEGIN = '\033[1m'
+BOLD_END = '\033[0m'
 
 def insert_config_into_exchanges(config):
     limit_only = config["limit_only"]
@@ -186,12 +188,13 @@ def handle_view_month_datas():
         abs_quote_profit = info['end_quote'] - info['start_quote']
         overall_profit = abs_base_profit + (abs_quote_profit * info['last_price'])
         relative_profit = (overall_profit/ (start_base + (start_quote * info['last_price']))) * 100
-        print('Monthly Data for {} at {}'.format(merkato_name, human_time))
+        title = 'Monthly Data for {} at {}'.format(merkato_name, human_time)
+        print(BOLD_BEGIN + title + BOLD_END)
         print('Spread: {} Step: {} Start Base: {} Start Quote: {}'.format(spread, step, start_base, start_quote))
         print('MM profit -> base: {} quote: {}'.format(info['mm_base_profit'], info['mm_quote_profit']))
         print('ABS crypto profit base: {} quote: {} overall: {} (Denom in base) relative: {}%'.format(abs_base_profit, abs_quote_profit, overall_profit, relative_profit))
         print('Volume base: {} quote: {}'.format(info['base_volume'], info['quote_volume']))
-        print('USD Value: {}'.format(info['ending_usd_val']))
+        print('USD Value: {} \n'.format(info['ending_usd_val']))
 
 def update_monthly_datas():
     merkatos = get_all_merkatos()
