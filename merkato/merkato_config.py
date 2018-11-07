@@ -221,7 +221,7 @@ def generate_complete_monthly_data(merkato):
     insert_monthly_info (**monthly_data)
     reset_merkato_metrics(merkato, absolute_base, absolute_quote)
 
-def update_merkato_metrics(merkato, base_balance, quote_balance):
+def reset_merkato_metrics(merkato, base_balance, quote_balance):
     UUID = merkato['exchange_pair']
     update_merkato(UUID, 'buy_volume', 0)
     update_merkato(UUID, 'sell_volume', 0)
