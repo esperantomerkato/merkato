@@ -162,6 +162,8 @@ def generate_complete_merkato_configs(merkato_objects):
         complete_config['quote_profit'] = merkato['quote_profit']
         complete_config['init_quote_balance'] = merkato['init_quote_balance']
         complete_config['init_base_balance'] = merkato['init_base_balance']
+        complete_config['buy_volume'] = merkato['buy_volume']
+        complete_config['sell_volume'] = merkato['sell_volume']
         merkato_complete_configs.append(complete_config)
     return merkato_complete_configs
 

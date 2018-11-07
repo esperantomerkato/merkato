@@ -38,6 +38,8 @@ INIT_BASE_BALANCE = 'init_base_balance'
 BASE_PROFIT = 'base_profit'
 QUOTE_PROFIT = 'quote_profit'
 LIMIT = 'limit'
+BUY_VOLUME = 'buy_volume'
+SELL_VOLUME = 'sell_volume'
 
 round_trip_exchange_fees = {
     'krak': .0032,

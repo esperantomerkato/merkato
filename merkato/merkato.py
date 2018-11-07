@@ -7,7 +7,7 @@ import logging
 
 from decimal import *
 from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID_RESERVE, EXCHANGE, ONE_BITCOIN, STARTING_PRICE, \
-    ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, BASE_PROFIT, QUOTE_PROFIT, INIT_BASE_BALANCE, INIT_QUOTE_BALANCE
+    ONE_SATOSHI, FIRST_ORDER, MARKET, TYPE, BASE_PROFIT, QUOTE_PROFIT, INIT_BASE_BALANCE, INIT_QUOTE_BALANCE, SELL_VOLUME, BUY_VOLUME
 from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, get_merkato
 from merkato.utils import validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
@@ -21,7 +21,8 @@ getcontext().prec = 8
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread, bid_reserved_balance, ask_reserved_balance,
                  user_interface=None, profit_margin=0, first_order='', starting_price=.018, increased_orders = 0,
-                 step=1.0033, distribution_strategy=1, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0,):
+                 step=1.0033, distribution_strategy=1, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0,
+                 buy_volume=0, sell_volume=0):
 
         validate_merkato_initialization(configuration, coin, base, spread)
         self.initialized = False
@@ -35,10 +36,6 @@ class Merkato(object):
         self.increased_orders = increased_orders
         self.quote_profit = Decimal(quote_profit)
         self.base_profit = Decimal(base_profit)
-        # Exchanges have a maximum number of orders every user can place. Due
-        # to this, every Merkato has a reserve of coins that are not currently
-        # allocated. As the price approaches unallocated regions, the reserves
-        # are deployed.
         self.bid_reserved_balance = Decimal(float(bid_reserved_balance))
         self.ask_reserved_balance = Decimal(float(ask_reserved_balance))
         self.init_base_balance = init_base_balance
@@ -46,6 +43,8 @@ class Merkato(object):
         # The current sum of all partially filled orders
         self.base_partials_balance = 0
         self.quote_partials_balance = 0
+        self.buy_volume = buy_volume
+        self.sell_volume = sell_volume
 
         self.user_interface = user_interface
 
@@ -93,6 +92,14 @@ class Merkato(object):
         self.cancelrange(ONE_SATOSHI, ONE_BITCOIN) # Technically not all, but should be good enough
         kill_merkato(self.mutex_UUID)
 
+    def update_buy_volume(self, raw_volume, price):
+        finalized_volume = float(raw_volume) * float(price)
+        self.buy_volume += finalized_volume
+        update_merkato(self.mutex_UUID, BUY_VOLUME, self.buy_volume)
+
+    def update_sell_volume(self, new_volume):
+        self.sell_volume += new_volume
+        update_merkato(self.mutex_UUID, SELL_VOLUME, self.sell_volume)
 
     def rebalance_orders(self, new_txes):
         # This function places matching orders for all orders that filled fully since last
@@ -136,6 +143,7 @@ class Merkato(object):
                 continue
 
             if tx[TYPE] == SELL:
+                self.update_sell_volume(filled_amount)
                 buy_price = Decimal(price) * ( 1  - self.spread)
                 
                 # Convert from the coin amount into base at the executed price
@@ -164,6 +172,7 @@ class Merkato(object):
                     
 
             if tx[TYPE] == BUY:
+                self.update_buy_volume(filled_amount, price)
                 sell_price = Decimal(price) * ( 1  + self.spread)
 
                 log_transaction_message("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))

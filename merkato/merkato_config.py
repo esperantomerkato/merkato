@@ -204,6 +204,7 @@ def generate_complete_monthly_data(merkato):
     monthly_data['mm_quote_profit'] = merkato['quote_profit']
     monthly_data['start_quote'] = merkato['init_quote_balance']
     monthly_data['start_base'] = merkato['init_base_balance']
+    monthly_data['exchange_pair'] = merkato['exchange_pair']
     exchange = load_exchange_by_merkato(merkato)
     
     absolute_balances = exchange.get_balances()
