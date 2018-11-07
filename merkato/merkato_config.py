@@ -227,8 +227,8 @@ def reset_merkato_metrics(merkato, base_balance, quote_balance):
     update_merkato(UUID, 'sell_volume', 0)
     update_merkato(UUID, 'init_base_balance', base_balance)
     update_merkato(UUID, 'init_quote_balance', quote_balance)
-    update_merkato(UUID, 'mm_quote_profit', 0)
-    update_merkato(UUID, 'mm_base_profit', 0)
+    update_merkato(UUID, 'quote_profit', 0)
+    update_merkato(UUID, 'base_profit', 0)
 
 def get_current_balances(data, balances):
     absolute_base = float(balances['base']['amount']['balance'])
