@@ -285,7 +285,7 @@ def handle_add_asset():
 
         password = getpass.getpass('Enter password for merkato: ')
         decrypt_keys(config=complete_config['configuration'], password=password)
-        initialized_merkato = merkato.Merkato(**complete_config)
+        initialized_merkato = main_merkato.Merkato(**complete_config)
         initialized_merkato.update_orders(asset_to_add, amount_to_add)
     else:
         handle_add_asset()
