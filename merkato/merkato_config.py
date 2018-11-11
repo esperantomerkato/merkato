@@ -301,12 +301,12 @@ def start_merkatos(password=None):
 
     for complete_config in complete_merkato_configs:
         decrypt_keys(config=complete_config['configuration'], password=password)
-        merkato = main_merkato.Merkato(**complete_config)
-        initialized_merkatos.append(merkato)
+        merkato_instance = main_merkato.Merkato(**complete_config)
+        initialized_merkatos.append(merkato_instance)
 
     while True:
-        for merkato in initialized_merkatos:
-            merkato.update()
+        for merkato_instance in initialized_merkatos:
+            merkato_instance.update()
         time.sleep(6)
 
 def create_new_merkato():
