@@ -98,7 +98,7 @@ class Merkato(object):
         update_merkato(self.mutex_UUID, BUY_VOLUME, self.buy_volume)
 
     def update_sell_volume(self, new_volume):
-        self.sell_volume += new_volume
+        self.sell_volume += float(new_volume)
         update_merkato(self.mutex_UUID, SELL_VOLUME, self.sell_volume)
 
     def rebalance_orders(self, new_txes):
