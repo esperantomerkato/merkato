@@ -4,6 +4,7 @@ import json
 import os.path
 from merkato.utils.database_utils import get_exchange,insert_exchange, no_exchanges_table_exists, create_exchanges_table, create_merkatos_table, create_exchanges_table, drop_merkatos_table, drop_exchanges_table, get_exchange as get_exchange_from_db, get_all_merkatos, update_merkato
 from merkato.exchanges.tux_exchange.utils import validate_credentials
+from merkato.exchanges.kraken_exchange.utils import validate_kraken
 from merkato.exchanges.binance_exchange.utils import validate_keys
 from merkato.constants import EXCHANGE
 from merkato.merkato import Merkato
@@ -65,6 +66,19 @@ def create_exchange():
         elif exchange == 'bit':
             print("Currently Unsupported")
             continue
+
+        elif exchange == 'krak':
+            update_config_with_credentials(config)
+            credentials_are_valid = validate_kraken(config)
+
+            while not credentials_are_valid:
+                update_config_with_credentials(config)
+                credentials_are_valid = validate_kraken(config)
+
+            encrypt_keys(config)
+            insert_config_into_exchanges(config)
+            decrypt_keys(config)
+            return config
         
         elif exchange == 'bina':
             update_config_with_credentials(config)

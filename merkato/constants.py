@@ -11,7 +11,8 @@ known_exchanges = {
     'polo': 'polo',
     'bit': 'bit',
     'test': 'test',
-    'bina': 'bina'
+    'bina': 'bina',
+    'krak': 'krak'
 }
 known_assets = {
     'XMR': 'XMR',
