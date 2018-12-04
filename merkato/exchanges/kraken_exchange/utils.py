@@ -9,7 +9,7 @@ def validate_kraken(config):
     client = krakenex.API(public_key, private_key)
 
     try:
-        client.query_public('Ticker', {'pair': 'XMRXBT'})
+        client.query_private('OpenOrders', {'oflags': 'viqc'})
     except Exception as e:
         log.error(e)
         return False
