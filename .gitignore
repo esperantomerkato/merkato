@@ -17,3 +17,5 @@ get_orders.py
 profit.py
 output.log
 testmy_merkato_tax_audit_logs.csv
+krakmy_merkato_tax_audit_logs.csv
+tx_logs.txt

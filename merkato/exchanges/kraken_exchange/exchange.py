@@ -3,7 +3,8 @@ import requests
 import time
 from merkato.exchanges.exchange_base import ExchangeBase
 from merkato.constants import MARKET, SELL, BUY, LIMIT, ID, round_trip_exchange_fees
-from merkato.exchanges.kraken_exchange.constants import DEPTH, ADD_ORDER, RESULT, OPEN_ORDERS, REF_ID, DESCRIPTION, CANCEL_ORDER, TICKER, TRADES_HISTORY, QUERY_ORDERS
+from merkato.exchanges.kraken_exchange.constants import DEPTH, ADD_ORDER, RESULT, OPEN_ORDERS, REF_ID, DESCRIPTION, CANCEL_ORDER, TICKER, TRADES_HISTORY, QUERY_ORDERS, \
+    CRYPTO_ASSETS, TRADES, OPEN, VOL, VOLUME_EXECUTED
 import krakenex
 from math import floor
 import logging
@@ -25,9 +26,9 @@ class KrakenExchange(ExchangeBase):
         self.client = krakenex.API(config['public_api_key'], config['private_api_key'])
         self.limit_only = config['limit_only']
         self.retries = 5
-        self.coin = coin
-        self.base = base
-        self.ticker = coin + 'XBT'
+        self.coin = CRYPTO_ASSETS[coin]
+        self.base = CRYPTO_ASSETS[base]
+        self.ticker = self.coin + self.base
         self.name = 'krak'
         self.fee = round_trip_exchange_fees[self.name]
 
@@ -86,7 +87,7 @@ class KrakenExchange(ExchangeBase):
         '''
         amt_str = "{:0.0{}f}".format(amount, XMR_AMOUNT_PRECISION)
         bid_str = "{:0.0{}f}".format(bid, XMR_PRICE_PRECISION)
-        info = self.client.get_symbol_info(symbol=self.ticker)
+        # info = self.client.get_symbol_info(symbol=self.ticker)
         log.info("Bina placing buy bid: {} amount: {}".format(bid_str, amt_str))
         order = self.client.query_private(ADD_ORDER,
             {'pair': self.ticker,
@@ -175,7 +176,7 @@ class KrakenExchange(ExchangeBase):
     def get_my_open_orders(self, context_formatted=False):
         ''' Returns all open orders for the authenticated user '''
                 
-        orders = self.client.query_private(OPEN_ORDERS, {'oflags': 'viqc'})[RESULT]
+        orders = self.client.query_private(OPEN_ORDERS, {'oflags': 'viqc'})[RESULT][OPEN]
         # orders is an array of dicts we need to transform it to an dict of dicts to conform to binance
         new_dict = {}
         for order_id in orders:
@@ -185,8 +186,8 @@ class KrakenExchange(ExchangeBase):
             new_dict[id] = order_data
             new_dict[id][ID] = order_id
             
-            origQty = Decimal(float(order['vol']))
-            executedQty = Decimal(float(order['vol_exec']))
+            origQty = Decimal(float(order[VOL]))
+            executedQty = Decimal(float(order[VOLUME_EXECUTED]))
             new_dict[id]['amount'] = origQty - executedQty
         return new_dict
 
@@ -200,10 +201,13 @@ class KrakenExchange(ExchangeBase):
         if order_id == 0:
             log.warning("Cancel order id 0. Bailing")
             return False
-
-        return self.client.query_private(CANCEL_ORDER,
+        print('self.ticker', self.ticker)
+        print('orderid', order_id)
+        canceled_order = self.client.query_private(CANCEL_ORDER,
             {   'pair':self.ticker,
-                'orderId': order_id})[RESULT]
+                'txid': order_id})
+        print('canceled', canceled_order)
+        return canceled_order[RESULT]
 
 
     def get_ticker(self, coin=None):
@@ -277,7 +281,8 @@ class KrakenExchange(ExchangeBase):
         # if start_is_provided:
         #     trades = self.client.get_my_trades(symbol=self.ticker, fromId=int(start), recvWindow=10000000)
         # else:
-        trades = self.client.query_private(TRADES_HISTORY)
+        trades = self.client.query_private(TRADES_HISTORY)[RESULT][TRADES]
+        print('trades', trades)
         trade_array = []
         for trade_id in trades:
             trade = trades[trade_id]

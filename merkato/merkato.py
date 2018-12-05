@@ -545,7 +545,9 @@ class Merkato(object):
         ''' TODO: Function comment
         '''
         open_orders = self.exchange.get_my_open_orders()
+        print('open_orders', open_orders)
         for order in open_orders:
+            print('canceling order', order)
             price = open_orders[order][PRICE]
             order_id = open_orders[order][ID]
             if Decimal(price) >= Decimal(start) and Decimal(price) <= Decimal(end):

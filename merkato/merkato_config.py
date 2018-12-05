@@ -205,6 +205,7 @@ def handle_view_month_datas():
         title = 'Monthly Data for {} at {}'.format(merkato_name, human_time)
         print(BOLD_BEGIN + title + BOLD_END)
         print('Spread: {} Step: {} Start Base: {} Start Quote: {}'.format(spread, step, start_base, start_quote))
+        print('End Numbers base: {} quote: {}'.format(info['end_base'], info['end_quote']))
         print('MM profit -> base: {} quote: {}'.format(info['mm_base_profit'], info['mm_quote_profit']))
         print('ABS crypto profit base: {} quote: {} overall: {} (Denom in base) relative: {}%'.format(abs_base_profit, abs_quote_profit, overall_profit, relative_profit))
         print('Volume base: {} quote: {}'.format(info['base_volume'], info['quote_volume']))
@@ -321,7 +322,7 @@ def start_merkatos(password=None):
     while True:
         for merkato_instance in initialized_merkatos:
             merkato_instance.update()
-        time.sleep(6)
+        time.sleep(10)
 
 def create_new_merkato():
     password = getpass.getpass()
