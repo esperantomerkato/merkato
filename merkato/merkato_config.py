@@ -9,11 +9,12 @@ from merkato.exchanges.binance_exchange.utils import validate_keys
 from merkato.constants import EXCHANGE
 from merkato.merkato import Merkato
 from merkato import merkato as main_merkato
-from merkato.utils import load_config, decrypt_keys, update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato
-from binance.client import Client
+from merkato.utils import load_config, decrypt_keys, update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato, twilio_wrapper
 from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_monthly_info_table, drop_monthly_info_table, get_all_monthyly_info
+
 import getpass
 import time
+from binance.client import Client
 
 BOLD_BEGIN = '\033[1m'
 BOLD_END = '\033[0m'
@@ -321,7 +322,7 @@ def start_merkatos(password=None):
 
     while True:
         for merkato_instance in initialized_merkatos:
-            merkato_instance.update()
+            twilio_wrapper(merkato_instance)
         time.sleep(10)
 
 def create_new_merkato():
@@ -342,3 +343,4 @@ def create_new_merkato():
     merkato_args['increased_orders'] = get_merkato_variable('Increased Orders', 'SUGGESTED IS 0, 1, or 2')
     Merkato(**merkato_args)
     return password
+

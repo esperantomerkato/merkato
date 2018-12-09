@@ -8,3 +8,4 @@ cryptography
 python-binance
 websockets
 krakenex
+twilio

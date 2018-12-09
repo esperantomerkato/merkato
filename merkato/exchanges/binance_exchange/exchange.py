@@ -241,7 +241,7 @@ class BinanceExchange(ExchangeBase):
                 if attempt == self.retries - 1:
                     raise ValueError(e)
                 else:
-                    log.info("get_ticker on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    log.info("cancel_order on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
                     attempt += 1
 
 

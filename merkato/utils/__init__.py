@@ -6,6 +6,8 @@ from merkato.exchanges.binance_exchange.exchange import BinanceExchange
 from merkato.exchanges.kraken_exchange.exchange import KrakenExchange
 from merkato.constants import known_exchanges, known_assets
 from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato, update_merkato
+from twilio_info import twilio_token, twilio_sid, twilio_phone, work_phone
+
 import base64
 import time
 import getpass
@@ -17,6 +19,8 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from twilio.rest import Client
+
 
 getcontext().prec = 8
 salt = 'merkato'
@@ -370,3 +374,21 @@ def log_transaction_message(message):
     f = open("tx_logs.txt", "a")
     f.write(message + '\n')
     log.info(message)
+
+def twilio_wrapper(merkato_instance):
+    try:
+        merkato_instance.update()
+    except:
+        twilio_client = Client(twilio_sid, twilio_token)
+        cwd = os.getcwd()
+        txt = 'FAILURE on {} {} at {}'.format(merkato_instance.exchange.name, merkato_instance.exchange.ticker, cwd)
+        message = twilio_client.messages.create(
+                              from_= twilio_phone,
+                              body=txt,
+                              to=work_phone
+                          )
+
+        print(message.sid)
+        f = open("tx_logs.txt", "a")
+        f.write(txt + '\n')
+        raise

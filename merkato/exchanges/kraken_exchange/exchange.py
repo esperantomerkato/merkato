@@ -25,7 +25,7 @@ class KrakenExchange(ExchangeBase):
     def __init__(self, config, coin, base, password='password'):
         self.client = krakenex.API(config['public_api_key'], config['private_api_key'])
         self.limit_only = config['limit_only']
-        self.retries = 5
+        self.retries = 8
         self.coin = CRYPTO_ASSETS[coin]
         self.base = CRYPTO_ASSETS[base]
         self.ticker = self.coin + self.base
@@ -166,30 +166,44 @@ class KrakenExchange(ExchangeBase):
             :param coin: string
         '''
         # TODO: Accept BTC_XYZ by stripping BTC_ if it exists
-        
-        orders = self.client.query_public(DEPTH, {'pair': self.ticker})[RESULT]
-
-        log.info("get_all_orders", orders)
-        return orders
-
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                orders = self.client.query_public(DEPTH, {'pair': self.ticker})[RESULT]
+                log.info("get_all_orders", orders)
+                return orders
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_all_orders on {} FAILED - attempt {} of {}".format("kraken", attempt, self.retries))
+                    attempt += 1
 
     def get_my_open_orders(self, context_formatted=False):
         ''' Returns all open orders for the authenticated user '''
-                
-        orders = self.client.query_private(OPEN_ORDERS, {'oflags': 'viqc'})[RESULT][OPEN]
-        # orders is an array of dicts we need to transform it to an dict of dicts to conform to binance
-        new_dict = {}
-        for order_id in orders:
-            order = orders[order_id]
-            order_data = orders[order_id][DESCRIPTION]
-            id = order[REF_ID]
-            new_dict[id] = order_data
-            new_dict[id][ID] = order_id
-            
-            origQty = Decimal(float(order[VOL]))
-            executedQty = Decimal(float(order[VOLUME_EXECUTED]))
-            new_dict[id]['amount'] = origQty - executedQty
-        return new_dict
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                orders = self.client.query_private(OPEN_ORDERS, {'oflags': 'viqc'})[RESULT][OPEN]
+                new_dict = {}
+                for order_id in orders:
+                    order = orders[order_id]
+                    order_data = orders[order_id][DESCRIPTION]
+                    id = order_id
+                    new_dict[id] = order_data
+                    new_dict[id][ID] = order_id
+                    
+                    origQty = Decimal(float(order[VOL]))
+                    executedQty = Decimal(float(order[VOLUME_EXECUTED]))
+                    new_dict[id]['amount'] = origQty - executedQty
+                return new_dict
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_my_open_orders on {} FAILED - attempt {} of {}".format("kraken", attempt, self.retries))
+                    attempt += 1
 
     def cancel_order(self, order_id):
         ''' Cancels the order with the specified order ID
@@ -197,18 +211,22 @@ class KrakenExchange(ExchangeBase):
         '''
 
         log.info("Cancelling order.")
-
-        if order_id == 0:
-            log.warning("Cancel order id 0. Bailing")
-            return False
-        print('self.ticker', self.ticker)
-        print('orderid', order_id)
-        canceled_order = self.client.query_private(CANCEL_ORDER,
-            {   'pair':self.ticker,
-                'txid': order_id})
-        print('canceled', canceled_order)
-        return canceled_order[RESULT]
-
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                if order_id == 0:
+                    log.warning("Cancel order id 0. Bailing")
+                    return False
+                canceled_order = self.client.query_private(CANCEL_ORDER,
+                    {   'pair':self.ticker,
+                        'txid': order_id})
+                return canceled_order[RESULT]
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("cancel_order on {} FAILED - attempt {} of {}".format("kraken", attempt, self.retries))
+                    attempt += 1
 
     def get_ticker(self, coin=None):
         ''' Returns the current ticker data for the given coin. If no coin is given,
@@ -242,20 +260,30 @@ class KrakenExchange(ExchangeBase):
         '''
 
         # also keys go unused, also coin...
-        balances = self.client.query_private('Balance')[RESULT]
-        coin_balance = balances[self.coin]
-        base_balance = balances[self.base]
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                balances = self.client.query_private('Balance')[RESULT]
+                coin_balance = balances[self.coin]
+                base_balance = balances[self.base]
 
-        log.info("Base balance: {}".format(base_balance))
-        log.info("Coin balance: {}".format(coin_balance))
+                log.info("Base balance: {}".format(base_balance))
+                log.info("Coin balance: {}".format(coin_balance))
 
-        pair_balances = {"base" : {"amount": {'balance': base_balance},
-                                   "name" : self.base},
-                         "coin": {"amount": {'balance': coin_balance},
-                                  "name": self.coin},
-                        }
+                pair_balances = {"base" : {"amount": {'balance': base_balance},
+                                        "name" : self.base},
+                                "coin": {"amount": {'balance': coin_balance},
+                                        "name": self.coin},
+                                }
 
-        return pair_balances
+                return pair_balances
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_ticker on {} FAILED - attempt {} of {}".format("kraken", attempt, self.retries))
+                    attempt += 1
 
     def process_new_transactions(self, new_txs, context_only=False):
         for trade in new_txs:
@@ -264,11 +292,10 @@ class KrakenExchange(ExchangeBase):
 
                 date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(floor(trade['time']/1000))))
                 trade['date'] = date
-
             trade['total'] = Decimal(trade['price']) * Decimal(trade['qty'])
             trade['amount'] = Decimal(trade['qty'])
             if not context_only:
-                order_info = self.client.query_private(QUERY_ORDERS, {'oflags': 'viqc', 'txid': [trade['orderId']]})[RESULT][trade['orderId']]
+                order_info = self.client.query_private(QUERY_ORDERS, {'trades': 'true', 'txid': trade['orderId']})[RESULT][trade['orderId']]
                 trade['initamount'] = order_info['vol']
 
 
@@ -276,22 +303,26 @@ class KrakenExchange(ExchangeBase):
         ''' TODO Function Definition
         '''
         log.info("Getting trade history...")
-        # start_is_provided = start != 0 and start != ''
-        # print('start', start)
-        # if start_is_provided:
-        #     trades = self.client.get_my_trades(symbol=self.ticker, fromId=int(start), recvWindow=10000000)
-        # else:
-        trades = self.client.query_private(TRADES_HISTORY)[RESULT][TRADES]
-        print('trades', trades)
-        trade_array = []
-        for trade_id in trades:
-            trade = trades[trade_id]
-            trade[ID] = trade_id
-            trade['orderId'] = trade['ordertxid'] 
-            trade['qty'] = float(trade['vol']) * float(trade['price'])
-            trade_array.append(trade)
-        trade_array.reverse()
-        return trade_array
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                trades = self.client.query_private(TRADES_HISTORY)[RESULT][TRADES]
+                trade_array = []
+                for trade_id in trades:
+                    trade = trades[trade_id]
+                    trade[ID] = trade_id
+                    trade['orderId'] = trade['ordertxid'] 
+                    trade['qty'] = float(trade['vol']) * float(trade['price'])
+                    trade_array.append(trade)
+                trade_array.reverse()
+                return trade_array
+            
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_ticker on {} FAILED - attempt {} of {}".format("kraken", attempt, self.retries))
+                    attempt += 1
 
 
     def get_last_trade_price(self):
@@ -313,12 +344,32 @@ class KrakenExchange(ExchangeBase):
     
 
     def get_total_amount(self, order_id):
-        order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
-        return Decimal(order_info['origQty'])
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                order_info = self.client.query_private(QUERY_ORDERS, {'trades': 'true', 'txid': order_id })[RESULT][order_id]
+                return Decimal(order_info['vol'])
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_total_amount on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
 
     def is_partial_fill(self, order_id): 
-        order_info = self.client.get_order(symbol=self.ticker, orderId=order_id, recvWindow=10000000)
-        amount_placed = Decimal(order_info['origQty'])
-        amount_executed = Decimal(order_info['executedQty'])
-        log.info('Binance checking_is_partial_fill order_id: {} amount_placed: {} amount_executed: {}'.format(order_id, amount_placed, amount_executed))
-        return amount_placed > amount_executed
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                order_info = self.client.query_private(QUERY_ORDERS, {'trades': 'true', 'txid': order_id })[RESULT][order_id]
+                print('orderInfor', order_info)
+                amount_placed = Decimal(order_info['vol'])
+                amount_executed = Decimal(order_info['vol_exec'])
+                log.info('Binance checking_is_partial_fill order_id: {} amount_placed: {} amount_executed: {}'.format(order_id, amount_placed, amount_executed))
+                return amount_placed > amount_executed
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("is_partial_fill on {} FAILED - attempt {} of {}".format("kraken", attempt, self.retries))
+                    attempt += 1
