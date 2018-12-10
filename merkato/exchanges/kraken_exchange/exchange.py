@@ -14,7 +14,8 @@ from requests.adapters import HTTPAdapter
 s = requests.Session()
 s.mount('http', HTTPAdapter(max_retries=3))
 s.mount('https', HTTPAdapter(max_retries=3))
-log = logging.getLogger(__name__)
+root_log = logging.getLogger("myapp")
+log = root_log.getChild(__name__)
 getcontext().prec = 8
 
 XMR_AMOUNT_PRECISION = 3

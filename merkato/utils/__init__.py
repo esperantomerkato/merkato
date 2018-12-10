@@ -263,20 +263,12 @@ def ensure_bytes(password, public_key, private_key):
     return (password, public_key, private_key)
 
 
-def log_on_call(f):
-    def wrapped(self, *args, **kwargs):
-        log = logging.getLogger()
-        log.debug("Entering {}".format(f.__name__))
-        return f(self, *args, **kwargs)
-    return wrapped
-
-
-def log_all_methods(cls):
-    for name in cls.__dict__:
-        attr = getattr(cls, name)
-        if callable(attr):
-            setattr(cls, name, log_on_call(attr))
-    return cls
+#def log_all_methods(cls):
+#    for name in cls.__dict__:
+#        attr = getattr(cls, name)
+#        if callable(attr):
+#            setattr(cls, name, log_on_call(attr))
+#    return cls
 
 
 def log_new_cointrackr_transactions(newTransactionHistory, coin, base, name):
@@ -369,11 +361,6 @@ def decrypt_keys(config, password=None):
 
     return config
 
-def log_transaction_message(message):
-    log = logging.getLogger(__name__)
-    f = open("tx_logs.txt", "a")
-    f.write(message + '\n')
-    log.info(message)
 
 def twilio_wrapper(merkato_instance):
     try:

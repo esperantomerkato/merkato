@@ -8,7 +8,8 @@ from merkato.utils.database_utils import no_merkatos_table_exists, create_merkat
     no_exchanges_table_exists, create_exchanges_table, drop_exchanges_table
 
 import logging
-log = logging.getLogger("client")
+root_log = logging.getLogger("myapp")
+log = root_log.getChild("client")
 
 """
 Merkato WebSocket CLI client.

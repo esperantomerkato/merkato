@@ -5,7 +5,8 @@ import websockets
 from merkato.merkato import Merkato
 
 import logging
-log = logging.getLogger("server")
+root_log = logging.getLogger("myapp")
+log = root_log.getChild("server")
 
 # TODO: Translate incoming messages to Merkato method calls
 # TODO: Security: restrict origins to localhost?

@@ -1,7 +1,8 @@
 from binance.client import Client
 
 import logging
-log = logging.getLogger(__name__)
+root_log = logging.getLogger("myapp")
+log = root_log.getChild(__name__)
 
 
 def validate_keys(config):

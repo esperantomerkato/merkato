@@ -11,13 +11,14 @@ from merkato.constants import BUY, SELL, ID, PRICE, LAST_ORDER, ASK_RESERVE, BID
 from merkato.utils.database_utils import update_merkato, insert_merkato, merkato_exists, kill_merkato, get_merkato
 from merkato.utils import validate_merkato_initialization, get_relevant_exchange, \
     get_allocated_pair_balances, check_reserve_balances, get_last_order, get_new_history, calculate_scaling_factor, \
-    get_first_order, get_time_of_last_order, get_market_results, log_all_methods, log_new_cointrackr_transactions, \
-    calculate_remaining_amount, create_price_data, log_transaction_message
+    get_first_order, get_time_of_last_order, get_market_results, log_new_cointrackr_transactions, \
+    calculate_remaining_amount, create_price_data
 
-log = logging.getLogger(__name__)
+root_log = logging.getLogger("myapp")
+log = root_log.getChild(__name__)
 getcontext().prec = 8
 
-@log_all_methods
+#@log_all_methods
 class Merkato(object):
     def __init__(self, configuration, coin, base, spread, bid_reserved_balance, ask_reserved_balance,
                  user_interface=None, profit_margin=0, first_order='', starting_price=.018, increased_orders = 0,
@@ -107,7 +108,7 @@ class Merkato(object):
         factor = self.spread*self.profit_margin/2
         ordered_transactions = new_txes
 
-        log_transaction_message('ordered transactions rebalanced: {}'.format(ordered_transactions))
+        log.info('ordered transactions rebalanced: {}'.format(ordered_transactions))
 
         filled_orders = []
         market_orders = []
@@ -116,7 +117,7 @@ class Merkato(object):
             self.exchange.process_new_transactions(ordered_transactions)
 
         for tx in ordered_transactions:
-            log_transaction_message('Checking Transaction: {}\n'.format(tx))
+            log.info('Checking Transaction: {}'.format(tx))
             orderid = tx['orderId']
             tx_id   = tx[ID]
             price   = tx[PRICE]
@@ -153,20 +154,20 @@ class Merkato(object):
                 # This is the actual number we want to apply, not the original executed amount.
                 amount = coin_amt
 
-                log_transaction_message("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
+                log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
 
                 market = self.exchange.buy(amount, buy_price)
                 # A lock is probably needed somewhere near here in case of unexpected shutdowns
 
                 if market == MARKET:
-                    log_transaction_message('MARKET ORDER buy {}'.format(market))
+                    log.info('MARKET ORDER buy {}'.format(market))
                     market_orders.append((amount, buy_price, BUY, tx_id,))
 
                 self.apply_filled_difference(tx, total_amount)
 
                 is_round_trip = float(price) <= (float(self.starting_price) * float(1+(self.spread/2)))
                 if is_round_trip:
-                    log_transaction_message('Is round trip sell price: {}'.format(price))
+                    log.info('Is round trip sell price: {}'.format(price))
                     self.base_profit += total_amount * Decimal(float(price)) * (self.spread - Decimal(self.exchange.fee *2))
                     update_merkato(self.mutex_UUID, BASE_PROFIT, float(self.base_profit))
                     
@@ -175,25 +176,25 @@ class Merkato(object):
                 self.update_buy_volume(filled_amount, price)
                 sell_price = Decimal(price) * ( 1  + self.spread)
 
-                log_transaction_message("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
+                log.info("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
 
                 market = self.exchange.sell(amount, sell_price)
                 
                 if market == MARKET:
-                    log_transaction_message('MARKET ORDER sell {}'.format(market))
+                    log.info('MARKET ORDER sell {}'.format(market))
                     market_orders.append((amount, sell_price, SELL, tx_id))
 
                 self.apply_filled_difference(tx, total_amount)
 
                 is_round_trip = float(price) >= (float(self.starting_price) * float(1-(self.spread/2)))
                 if is_round_trip:
-                    log_transaction_message('Is round trip buy price: {}'.format(price))
+                    log.info('Is round trip buy price: {}'.format(price))
                     self.quote_profit += total_amount * Decimal(self.spread - Decimal(self.exchange.fee *2))
                     update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(self.quote_profit))
 
 
             if market != MARKET: 
-                log_transaction_message('NOT MARKET ORDER')
+                log.info('NOT MARKET ORDER')
                 update_merkato(self.mutex_UUID, LAST_ORDER, tx[ID])
 
             filled_orders.append(orderid)
@@ -208,7 +209,7 @@ class Merkato(object):
             self.handle_market_order(*order)
 
         log_new_cointrackr_transactions(ordered_transactions, self.exchange.coin, self.exchange.base, self.exchange.name)
-        log_transaction_message('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
+        log.info('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
         return ordered_transactions
 
 
@@ -473,7 +474,7 @@ class Merkato(object):
     def update(self):
         ''' TODO: Function comment
         '''
-        log.info("Update entered\n")
+        log.info("Update entered")
         
         now = str(datetime.datetime.now().isoformat()[:-7].replace("T", " "))
         last_trade_price = self.exchange.get_last_trade_price()
@@ -483,12 +484,12 @@ class Merkato(object):
         
         current_history = self.exchange.get_my_trade_history()
         new_history = get_new_history(current_history, last_order)
-        log.info('update new_history: {} first_order: {} last_order: {} \n'.format(new_history, first_order, last_order))
+        log.info('update new_history: {} first_order: {} last_order: {}'.format(new_history, first_order, last_order))
         new_transactions = []
         
         if len(new_history) > 0:
-            log_transaction_message('we have new history')
-            log_transaction_message("New transactions: {} \n".format(new_history))
+            log.info('we have new history')
+            log.info("New transactions: {}".format(new_history))
 
             new_transactions = self.rebalance_orders(new_history)
             #self.merge_orders()

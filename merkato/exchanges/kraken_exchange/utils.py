@@ -1,7 +1,8 @@
 import krakenex
 
 import logging
-log = logging.getLogger(__name__)
+root_log = logging.getLogger("myapp")
+log = root_log.getChild(__name__)
 
 def validate_kraken(config):
     public_key = config["public_api_key"]

@@ -7,6 +7,12 @@ from merkato.utils.monthly_info_db_utils import no_monthly_info_table_exists, cr
 import sqlite3
 import time
 import pprint
+import logging
+import logging.config
+
+
+root_log = logging.getLogger("myapp")
+log = root_log.getChild(__name__)
 
 def main():
     print("Merkato Alpha v0.1.1\n")
@@ -31,4 +37,38 @@ def main():
 
 
 if __name__ == '__main__':
+    d = {
+        "version": 1,
+        "formatters": {
+            "simple": {
+                "format": "%(asctime)s\t%(levelname)s\t%(name)s:%(lineno)d\t%(message)s"
+            }
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "level": "INFO",
+                "formatter": "simple",
+                "stream": "ext://sys.stdout"
+            },
+            "outfile": {
+                "class": "logging.FileHandler",
+                "level": "INFO",
+                "filename": "tx_logs.log",
+                "formatter": "simple",
+            }
+        },
+        "loggers": {
+            "logfile": {
+                "handlers": ["outfile"]
+            }
+        },
+        "root": {
+            "level": "INFO",
+            "handlers": ["console", "outfile"]
+        },
+        'disable_existing_loggers': False
+    }
+    logging.config.dictConfig(d)
+
     main()
