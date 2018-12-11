@@ -63,12 +63,12 @@ def update_config_with_credentials(config):
 
 def get_exchange():
     print("What exchange is this config file for?")
-    print("1. for TuxExchange type 'tux'")
-    print("2. for Poloniex type 'polo'")
-    print("3. for Bittrex type 'bit'")
-    print("3. for TestExchange type 'test'")
-    print("4. for BinanceExchange type 'bina'")
-    print("5. for KrakenExchange type 'krak'")
+    print("For TuxExchange type 'tux'")
+    print("For Poloniex type 'polo'")
+    print("For Bittrex type 'bit'")
+    print("For TestExchange type 'test'")
+    print("For BinanceExchange type 'bina'")
+    print("For KrakenExchange type 'krak'")
     selection = input("Selection: ")
     if selection not in known_exchanges:
         print('selected exchange not supported, try again')
@@ -77,11 +77,11 @@ def get_exchange():
 
 def get_asset(type):
     print("Which asset should be the {}?".format(type))
-    print("1 -> BTC")
-    print("2 -> XMR")
-    print("3 -> ETH")
-    print("4 -> USDT")
-    print("5 -> PEPECASH")
+    print("BTC")
+    print("XMR")
+    print("ETH")
+    print("USDT")
+    print("PEPECASH")
     selection = input("Selection: ")
     if selection not in known_assets:
         print('selected exchange not supported, try again')
@@ -111,7 +111,7 @@ def get_config_selection():
 
 
 def get_start_option():
-    print("Welcome to Esperanto Merkato! What would you like to do?")
+    print("Welcome to Esperanto Merkato! Select one of the numbered options below.")
     print("1 -> Run Merkatos")
     print("2 -> Add exchange")
     print("3 -> Add merkato (Requires existing exchanges)")
