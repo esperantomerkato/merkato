@@ -315,7 +315,6 @@ class KrakenExchange(ExchangeBase):
                     trade['orderId'] = trade['ordertxid'] 
                     trade['qty'] = float(trade['vol']) * float(trade['price'])
                     trade_array.append(trade)
-                print('trades', trade_array)
                 return trade_array
             
             except Exception as e:  # TODO - too broad exception handling
