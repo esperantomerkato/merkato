@@ -311,11 +311,11 @@ class KrakenExchange(ExchangeBase):
                 trade_array = []
                 for trade_id in trades:
                     trade = trades[trade_id]
-                    trade[ID] = trade_id
+                    trade[ID] = trade['time']
                     trade['orderId'] = trade['ordertxid'] 
                     trade['qty'] = float(trade['vol']) * float(trade['price'])
                     trade_array.append(trade)
-                trade_array.reverse()
+                print('trades', trade_array)
                 return trade_array
             
             except Exception as e:  # TODO - too broad exception handling
