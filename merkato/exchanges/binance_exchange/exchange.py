@@ -27,7 +27,7 @@ class BinanceExchange(ExchangeBase):
     def __init__(self, config, coin, base, password='password'):
         self.client = Client(config['public_api_key'], config['private_api_key'])
         self.limit_only = config['limit_only']
-        self.retries = 5
+        self.retries = 8
         self.coin = coin
         self.base = base
         self.ticker = coin + base
