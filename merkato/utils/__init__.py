@@ -21,7 +21,8 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from twilio.rest import Client
 
-
+root_log = logging.getLogger("myapp")
+log = root_log.getChild(__name__)
 getcontext().prec = 8
 salt = 'merkato'
 
@@ -365,7 +366,7 @@ def decrypt_keys(config, password=None):
 def twilio_wrapper(merkato_instance):
     try:
         merkato_instance.update()
-    except:
+    except Exception as e:
         twilio_client = Client(twilio_sid, twilio_token)
         cwd = os.getcwd()
         txt = 'FAILURE on {} {} at {}'.format(merkato_instance.exchange.name, merkato_instance.exchange.ticker, cwd)
@@ -375,7 +376,5 @@ def twilio_wrapper(merkato_instance):
                               to=work_phone
                           )
 
-        print(message.sid)
-        f = open("tx_logs.txt", "a")
-        f.write(txt + '\n')
-        raise
+        log.error(e)
+        log.error(message)
