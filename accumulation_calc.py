@@ -6,7 +6,7 @@ import sqlite3
 
 from binance.enums import *
 from binance.client import Client
-from binance.enums import *s
+from binance.enums import *
 import krakenex
 
 client = Client()
@@ -24,6 +24,10 @@ date_obj = {
 		'xmr': 0
 	}, 
 	'nov': {
+		'btc': 0,
+		'xmr': 0
+	}, 
+	'dec': {
 		'btc': 0,
 		'xmr': 0
 	}, 
@@ -70,7 +74,11 @@ for tx in history:
 	price = float(tx['price'])
 	if time >= sep_1 and time <= oct_1:
 		resolve_stack(amount, price, 'sep', tx['isBuyer'])
-	if time >= oct_1 and time <= nov_1:
+	elif time >= oct_1 and time <= nov_1:
 		resolve_stack(amount, price, 'oct', tx['isBuyer'])
-	if time >= nov_1 and time <= dec_1:
+	elif time >= nov_1 and time <= dec_1:
 		resolve_stack(amount, price, 'nov', tx['isBuyer'])
+	elif time >= nov_1 and time >= dec_1:
+		resolve_stack(amount, price, 'dec', tx['isBuyer'])
+
+print('dateobj', date_obj)

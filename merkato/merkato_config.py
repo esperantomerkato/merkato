@@ -321,8 +321,9 @@ def start_merkatos(password=None):
         initialized_merkatos.append(merkato_instance)
 
     while True:
+        faulty_merkatos = []
         for merkato_instance in initialized_merkatos:
-            twilio_wrapper(merkato_instance)
+            twilio_wrapper(merkato_instance, faulty_merkatos)
         time.sleep(10)
 
 def create_new_merkato():
