@@ -63,10 +63,11 @@ def start_resolve_order(price, amount, date, isBuyer):
 				stack.append({ 'amt': amount - amount_to_resolve, 'price': price, 'isBuyer': isBuyer })
 
 stack = []
-sep_1 = 1535734473000
-oct_1 = 1538412873000
-nov_1 = 1541091273000
-dec_1 = 1543683273000
+sep_1 = 1535760000000
+oct_1 = 1538352000000
+nov_1 = 1541030400000
+dec_1 = 1543622400000
+jan_1 = 1546300800000
 
 for tx in history:
 	time = tx['time']
@@ -78,7 +79,7 @@ for tx in history:
 		resolve_stack(amount, price, 'oct', tx['isBuyer'])
 	elif time >= nov_1 and time <= dec_1:
 		resolve_stack(amount, price, 'nov', tx['isBuyer'])
-	elif time >= nov_1 and time >= dec_1:
+	elif time >= dec_1 and time <= jan_1:
 		resolve_stack(amount, price, 'dec', tx['isBuyer'])
 
 print('dateobj', date_obj)
