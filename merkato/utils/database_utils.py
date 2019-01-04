@@ -69,7 +69,7 @@ def no_merkatos_table_exists():
 
 def insert_merkato(exchange, exchange_pair='tuxBTC_ETH', base='BTC', alt='XMR', spread='.1', 
     bid_reserved_balance=0, ask_reserved_balance=0, first_order='', starting_price=.018, profit_limit=10, last_order='', 
-    profit_margin=0, step=1.0033, base_partials_balance=0, quote_partials_balance=0, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0):
+    profit_margin=0, step=1.0033, base_partials_balance=0, quote_partials_balance=0, init_base_balance=0, init_quote_balance=0, base_profit=0, quote_profit=0, buy_volume=0, sell_volume=0):
     ''' TODO: Function Comment
     '''
     try:
@@ -82,7 +82,7 @@ def insert_merkato(exchange, exchange_pair='tuxBTC_ETH', base='BTC', alt='XMR', 
         c = conn.cursor()
         c.execute("""REPLACE INTO merkatos 
                     (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, init_quote_balance, init_base_balance, step, base_profit, quote_profit, buy_volume, sell_volume) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, init_quote_balance, init_base_balance, step, base_profit, quote_profit, 0, 0))
+                    (exchange, exchange_pair, base, alt, spread, profit_limit, last_order, first_order, starting_price, ask_reserved_balance, bid_reserved_balance, profit_margin, base_partials_balance, quote_partials_balance, starting_price, init_quote_balance, init_base_balance, step, base_profit, quote_profit, buy_volume, sell_volume))
         conn.commit()
         conn.close()
 
