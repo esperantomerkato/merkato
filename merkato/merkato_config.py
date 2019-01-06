@@ -324,7 +324,7 @@ def start_merkatos(password=None):
         faulty_merkatos = []
         for merkato_instance in initialized_merkatos:
             twilio_wrapper(merkato_instance, faulty_merkatos)
-        time.sleep(10)
+        time.sleep(8)
 
 def create_new_merkato():
     password = getpass.getpass()
