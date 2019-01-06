@@ -365,7 +365,7 @@ def decrypt_keys(config, password=None):
 
 def twilio_wrapper(merkato_instance, faulty_merkatos):
     try:
-        print('Refreshing :{}'.format(merkato.name))
+        print('Refreshing :{}'.format(merkato.mutex_UUID))
         time.sleep(1)
         merkato_instance.update()
     except Exception as e:
