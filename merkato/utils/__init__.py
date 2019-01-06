@@ -365,20 +365,20 @@ def decrypt_keys(config, password=None):
 
 def twilio_wrapper(merkato_instance, faulty_merkatos):
     try:
-        print('Refreshing :{}'.format(merkato_instance.name))
+        print('Refreshing :{}'.format(merkato_instance.exchange.name))
         time.sleep(1)
         merkato_instance.update()
     except Exception as e:
-        # if merkato_instance.name not in faulty_merkatos:
-        twilio_client = Client(twilio_sid, twilio_token)
-        cwd = os.getcwd()
-        txt = 'FAILURE on {} {} at {} \n Error Message: {}'.format(merkato_instance.exchange.name, merkato_instance.exchange.ticker, cwd, e)
-        message = twilio_client.messages.create(
-                            from_= twilio_phone,
-                            body=txt,
-                            to=work_phone
-                        )
+        if merkato_instance.name not in faulty_merkatos:
+            twilio_client = Client(twilio_sid, twilio_token)
+            cwd = os.getcwd()
+            txt = 'FAILURE on {} {} at {} \n Error Message: {}'.format(merkato_instance.exchange.name, merkato_instance.exchange.ticker, cwd, e)
+            message = twilio_client.messages.create(
+                                from_= twilio_phone,
+                                body=txt,
+                                to=work_phone
+                            )
 
-        log.error(e)
-        log.error(message)
-        faulty_merkatos.append(merkato_instance.name)
+            log.error(e)
+            log.error(message)
+            faulty_merkatos.append(merkato_instance.exchange.name)
