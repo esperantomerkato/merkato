@@ -387,6 +387,10 @@ def twilio_wrapper(merkato_instance, faulty_merkatos):
 def update_balances(merkato_instance, epoch):
     exchange_foreign_key = merkato_instance.exchange.name # This is the foreign key
 
+    if exchange_foreign_key != "bina":
+        print("Balance query not supported for non-binance exchanges yet")
+        return
+
     balances = merkato_instance.exchange.get_all_balances()
 
     print(balances)
