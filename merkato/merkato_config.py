@@ -9,7 +9,7 @@ from merkato.exchanges.binance_exchange.utils import validate_keys
 from merkato.constants import EXCHANGE
 from merkato.merkato import Merkato
 from merkato import merkato as main_merkato
-from merkato.utils import load_config, decrypt_keys, update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato, twilio_wrapper
+from merkato.utils import load_config, decrypt_keys, update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato, twilio_wrapper, update_balances
 from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_monthly_info_table, drop_monthly_info_table, get_all_monthyly_info
 
 import getpass
@@ -320,11 +320,28 @@ def start_merkatos(password=None):
         merkato_instance = main_merkato.Merkato(**complete_config)
         initialized_merkatos.append(merkato_instance)
 
+    last_balance_update = 0
     while True:
         faulty_merkatos = []
+
+        epoch = int(time.time())
+        time_since_balance_update = epoch - last_balance_update
+        should_update_balances = False # reset the flag
+
+        if time_since_balance_update > 60*60: # 1 hour, tweak this to desired rate of balance storage. Maybe break out into a config.
+            should_update_balances = True
+            last_balance_update = epoch
+
         for merkato_instance in initialized_merkatos:
             twilio_wrapper(merkato_instance, faulty_merkatos)
-        time.sleep(8)
+
+            if should_update_balances:
+                # Run an update for every merkato instance, even though there will be duplicates.
+                # We use timestamp as the unique field, so subsequent inserts will replace
+                update_balances(merkato_instance, epoch)
+
+            time.sleep(8)
+
 
 def create_new_merkato():
     password = getpass.getpass()

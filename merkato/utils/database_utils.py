@@ -342,3 +342,87 @@ def dict_factory(cursor, row):
 
     return d
 
+
+def create_balances_table():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute('''CREATE TABLE IF NOT EXISTS balances
+                    (exchanges_foreign_key integer, balance_string text, timestamp integer)''')
+        c.execute('''CREATE UNIQUE INDEX id_balances ON balances (timestamp)''')
+        conn.commit()
+        conn.close()
+
+
+def insert_balance(exchanges_foreign_key, balance_string, timestamp):
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute("""REPLACE INTO balances 
+                    (exchanges_foreign_key, balance_string, timestamp) VALUES (?,?,?)""",
+                    (exchanges_foreign_key, balance_string, timestamp))
+        conn.commit()
+        conn.close()
+
+
+def get_balances(exchanges_foreign_key, timestamp=0):
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+        conn.row_factory = dict_factory
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+
+        if timestamp == 0:
+            # Retrieve all records
+            c.execute('''SELECT * FROM balances WHERE exchanges_foreign_key = ?''', (exchanges_foreign_key,))
+            balances = c.fetchall()
+
+
+        else:
+            # Retrieve specific record
+            c.execute('''SELECT * FROM balances WHERE exchanges_foreign_key = ? AND timestamp = ?''', (exchanges_foreign_key,timestamp))
+            balances = c.fetchall()
+
+        conn.commit()
+        conn.close()
+
+        return balances
+
+
+def no_balances_table_exists():
+    ''' TODO: Function Comment
+    '''
+    try:
+        conn = sqlite3.connect('merkato.db')
+
+    except Exception as e:
+        print(str(e))
+
+    finally:
+        c = conn.cursor()
+        c.execute('''SELECT count(*) FROM sqlite_master WHERE type="table" AND name="balances"''')
+        number_of_balances_tables = c.fetchall()[0][0]
+        conn.commit()
+        conn.close()
+
+        return number_of_balances_tables == 0

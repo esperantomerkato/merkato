@@ -5,7 +5,7 @@ from merkato.exchanges.tux_exchange.exchange import TuxExchange
 from merkato.exchanges.binance_exchange.exchange import BinanceExchange
 from merkato.exchanges.kraken_exchange.exchange import KrakenExchange
 from merkato.constants import known_exchanges, known_assets
-from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato, update_merkato
+from merkato.utils.database_utils import get_exchange as get_exchange_from_db, get_merkatos_by_exchange, get_merkato, update_merkato, insert_balance
 from twilio_info import twilio_token, twilio_sid, twilio_phone, work_phone
 
 import base64
@@ -382,3 +382,13 @@ def twilio_wrapper(merkato_instance, faulty_merkatos):
             log.error(e)
             log.error(message)
             faulty_merkatos.append(merkato_instance.exchange.name)
+
+
+def update_balances(merkato_instance, epoch):
+    exchange_foreign_key = merkato_instance.exchange.name # This is the foreign key
+
+    balances = merkato_instance.exchange.get_all_balances()
+
+    print(balances)
+    balances_string = json.dumps(balances)
+    insert_balance(exchange_foreign_key, balances_string, epoch)

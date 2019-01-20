@@ -321,6 +321,24 @@ class BinanceExchange(ExchangeBase):
 
         return pair_balances
 
+
+    def get_all_balances(self):
+        ''' TODO Function Definition
+        '''
+        attempt = 0
+        while attempt < self.retries:
+            try:
+                context = self.client.get_account(recvWindow=10000000)
+                return context["balances"]
+
+            except Exception as e:  # TODO - too broad exception handling
+                if attempt == self.retries - 1:
+                    raise ValueError(e)
+                else:
+                    log.info("get_all_balances on {} FAILED - attempt {} of {}".format("binance", attempt, self.retries))
+                    attempt += 1
+
+
     def process_new_transactions(self, new_txs, context_only=False):
         for trade in new_txs:
 
