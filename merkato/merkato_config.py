@@ -201,14 +201,16 @@ def handle_view_month_datas():
         start_quote = info['start_quote']
         abs_base_profit = info['end_base'] - info['start_base']
         abs_quote_profit = info['end_quote'] - info['start_quote']
-        overall_profit = abs_base_profit + (abs_quote_profit * info['last_price'])
-        relative_profit = (overall_profit/ (start_base + (start_quote * info['last_price']))) * 100
+        base_overall_profit = abs_base_profit + (abs_quote_profit * info['last_price'])
+        quote_overall_profit = abs_quote_profit + (abs_base_profit / info['last_price'])
+        relative_profit = (quote_overall_profit/ (start_quote + (start_base / info['last_price']))) * 100
         title = 'Monthly Data for {} at {}'.format(merkato_name, human_time)
         print(BOLD_BEGIN + title + BOLD_END)
         print('Spread: {} Step: {} Start Base: {} Start Quote: {}'.format(spread, step, start_base, start_quote))
         print('End Numbers base: {} quote: {}'.format(info['end_base'], info['end_quote']))
         print('MM profit -> base: {} quote: {}'.format(info['mm_base_profit'], info['mm_quote_profit']))
-        print('ABS crypto profit base: {} quote: {} overall: {} (Denom in base) relative: {}%'.format(abs_base_profit, abs_quote_profit, overall_profit, relative_profit))
+        print('ABS crypto profit base: {} quote: {}'.format(abs_base_profit, abs_quote_profit))
+        print('ABS Comparison to previous month total base: {} total quote: {}  relative: {}% '.format(base_overall_profit, quote_overall_profit, relative_profit))
         print('Volume base: {} quote: {}'.format(info['base_volume'], info['quote_volume']))
         print('USD Value: {} \n'.format(info['ending_usd_val']))
 
