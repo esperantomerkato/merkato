@@ -46,6 +46,7 @@ class Merkato(object):
         self.quote_partials_balance = 0
         self.buy_volume = buy_volume
         self.sell_volume = sell_volume
+        self.last_tx_UUID = ''
 
         self.user_interface = user_interface
 
@@ -144,7 +145,6 @@ class Merkato(object):
                 continue
 
             if tx[TYPE] == SELL:
-                self.update_sell_volume(filled_amount)
                 buy_price = Decimal(price) * ( 1  - self.spread)
                 
                 # Convert from the coin amount into base at the executed price
@@ -158,6 +158,7 @@ class Merkato(object):
 
                 market = self.exchange.buy(amount, buy_price)
                 # A lock is probably needed somewhere near here in case of unexpected shutdowns
+                self.update_sell_volume(filled_amount)
 
                 if market == MARKET:
                     log.info('MARKET ORDER buy {}'.format(market))
@@ -173,13 +174,13 @@ class Merkato(object):
                     
 
             if tx[TYPE] == BUY:
-                self.update_buy_volume(filled_amount, price)
                 sell_price = Decimal(price) * ( 1  + self.spread)
 
                 log.info("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
 
                 market = self.exchange.sell(amount, sell_price)
-                
+                self.update_buy_volume(filled_amount, price)
+
                 if market == MARKET:
                     log.info('MARKET ORDER sell {}'.format(market))
                     market_orders.append((amount, sell_price, SELL, tx_id))
