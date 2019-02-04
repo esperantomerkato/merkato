@@ -393,6 +393,5 @@ def update_balances(merkato_instance, epoch):
 
     balances = merkato_instance.exchange.get_all_balances()
 
-    print(balances)
     balances_string = json.dumps(balances)
     insert_balance(exchange_foreign_key, balances_string, epoch)
