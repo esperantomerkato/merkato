@@ -158,7 +158,9 @@ class Merkato(object):
                 if self.last_placed_UUID != buy_price + amount:
                     log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
                     order_response = self.exchange.buy(amount, buy_price)
-                # A lock is probably needed somewhere near here in case of unexpected shutdowns
+                else:
+                    order_response = None
+
                 self.update_sell_volume(filled_amount)
 
                 if order_response == MARKET:
@@ -180,6 +182,9 @@ class Merkato(object):
                 if self.last_placed_UUID != sell_price + amount:
                     log.info("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
                     order_response = self.exchange.sell(amount, sell_price)
+                else:
+                    order_response = None
+                
                 self.update_buy_volume(filled_amount, price)
 
                 if order_response == MARKET:
