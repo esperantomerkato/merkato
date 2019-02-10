@@ -46,7 +46,7 @@ class Merkato(object):
         self.quote_partials_balance = 0
         self.buy_volume = buy_volume
         self.sell_volume = sell_volume
-        self.last_tx_UUID = ''
+        self.last_placed_UUID = '' #this assures that no faulty doubled up orders will be placed sequentially
 
         self.user_interface = user_interface
 
@@ -154,14 +154,15 @@ class Merkato(object):
                 # This is the actual number we want to apply, not the original executed amount.
                 amount = coin_amt
 
-                log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
 
-                market = self.exchange.buy(amount, buy_price)
+                if self.last_placed_UUID != buy_price + amount:
+                    log.info("Found sell {} corresponding buy price: {} amount: {}".format(tx, buy_price, amount))
+                    order_response = self.exchange.buy(amount, buy_price)
                 # A lock is probably needed somewhere near here in case of unexpected shutdowns
                 self.update_sell_volume(filled_amount)
 
-                if market == MARKET:
-                    log.info('MARKET ORDER buy {}'.format(market))
+                if order_response == MARKET:
+                    log.info('MARKET ORDER buy {}'.format(order_response))
                     market_orders.append((amount, buy_price, BUY, tx_id,))
 
                 self.apply_filled_difference(tx, total_amount)
@@ -171,18 +172,18 @@ class Merkato(object):
                     log.info('Is round trip sell price: {}'.format(price))
                     self.base_profit += total_amount * Decimal(float(price)) * (self.spread - Decimal(self.exchange.fee *2))
                     update_merkato(self.mutex_UUID, BASE_PROFIT, float(self.base_profit))
-                    
+                order_price = buy_price
 
             if tx[TYPE] == BUY:
                 sell_price = Decimal(price) * ( 1  + self.spread)
 
-                log.info("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
-
-                market = self.exchange.sell(amount, sell_price)
+                if self.last_placed_UUID != sell_price + amount:
+                    log.info("Found buy {} corresponding sell price: {} amount: {}".format(tx, sell_price, amount))
+                    order_response = self.exchange.sell(amount, sell_price)
                 self.update_buy_volume(filled_amount, price)
 
-                if market == MARKET:
-                    log.info('MARKET ORDER sell {}'.format(market))
+                if order_response == MARKET:
+                    log.info('MARKET ORDER sell {}'.format(order_response))
                     market_orders.append((amount, sell_price, SELL, tx_id))
 
                 self.apply_filled_difference(tx, total_amount)
@@ -192,9 +193,9 @@ class Merkato(object):
                     log.info('Is round trip buy price: {}'.format(price))
                     self.quote_profit += total_amount * Decimal(self.spread - Decimal(self.exchange.fee *2))
                     update_merkato(self.mutex_UUID, QUOTE_PROFIT, float(self.quote_profit))
+                order_price = sell_price
 
-
-            if market != MARKET: 
+            if order_response != MARKET: 
                 log.info('NOT MARKET ORDER')
                 update_merkato(self.mutex_UUID, LAST_ORDER, tx[ID])
 
@@ -205,11 +206,11 @@ class Merkato(object):
 
             if no_first_order:
                 update_merkato(self.mutex_UUID, FIRST_ORDER, tx_id)
+            self.last_placed_UUID = order_price + amount
+
 
         for order in market_orders:
             self.handle_market_order(*order)
-
-        log_new_cointrackr_transactions(ordered_transactions, self.exchange.coin, self.exchange.base, self.exchange.name)
         log.info('ending partials base: {} quote: {}'.format(self.base_partials_balance, self.quote_partials_balance))
         return ordered_transactions
 
