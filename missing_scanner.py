@@ -37,7 +37,14 @@ def get_filtered_amounts(orders):
     return list(map(lambda x: x['origQty'], orders))
 
 def get_filtered_prices(orders):
-    return list(map(lambda x: round(float(x['price']) * 100000), orders))
+    return list(map(lambda x: 'b \n ' + str(round(float(x['price']) * 100000)) if x['side'] == 'BUY' else 's \n ' + str(round(float(x['price']) * 100000)) , orders))
+
+def get_filtered_side(order):
+    text = '\n '
+    if order['side'] == 'BUY':
+        return text + 'b'
+    else:
+        return text + 's'
 
 my_input = input('which section of orders? 1, 2, or 3? ')
 if my_input == '1':

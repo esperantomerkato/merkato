@@ -13,7 +13,11 @@ client = Client()
 
 base_balance = client.get_asset_balance(asset='BTC', recvWindow=10000000)
 coin_balance = client.get_asset_balance(asset='XMR', recvWindow=10000000)
-history = client.get_my_trades(symbol='XMRBTC', recvWindow=10000000)
+history = client.get_my_trades(symbol='XMRBTC', recvWindow=10000000, fromId=5419788)
+history_2 = client.get_my_trades(symbol='XMRBTC', recvWindow=10000000, fromId=7294366)
+# history_3 = client.get_my_trades(symbol='XMRBTC', recvWindow=10000000, fromId=9113531)
+# print('history', history_3[0], history_3[len(history_3)-1])
+history += history_2
 date_obj = { 
 	'sep': {
 		'btc': 0,
@@ -31,17 +35,22 @@ date_obj = {
 		'btc': 0,
 		'xmr': 0
 	}, 
+	'jan': {
+		'btc': 0,
+		'xmr': 0
+	}, 
 }
+
 
 
 def resolve_stack(amount, price, date, isBuyer):
 	empty_stack = len(stack) == 0
 	if empty_stack:
-		stack.append({ 'amt': amount, 'price': price, 'isBuyer': isBuyer })
+		stack.insert(0, { 'amt': amount, 'price': price, 'isBuyer': isBuyer })
 
 	stack_same_as_order = stack[0]['isBuyer'] == isBuyer
 	if stack_same_as_order:
-		stack.append({ 'amt': amount, 'price': price, 'isBuyer': isBuyer })
+		stack.insert(0, { 'amt': amount, 'price': price, 'isBuyer': isBuyer })
 	elif not stack_same_as_order:
 		start_resolve_order(price, amount, date, isBuyer)
 
@@ -68,7 +77,7 @@ oct_1 = 1538352000000
 nov_1 = 1541030400000
 dec_1 = 1543622400000
 jan_1 = 1546300800000
-
+feb_1 = 1548979200000
 for tx in history:
 	time = tx['time']
 	amount = float(tx['qty'])
@@ -81,5 +90,7 @@ for tx in history:
 		resolve_stack(amount, price, 'nov', tx['isBuyer'])
 	elif time >= dec_1 and time <= jan_1:
 		resolve_stack(amount, price, 'dec', tx['isBuyer'])
+	elif time >= jan_1 and time <= feb_1:
+		resolve_stack(amount, price, 'jan', tx['isBuyer'])
 
 print('dateobj', date_obj)

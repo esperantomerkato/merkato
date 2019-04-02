@@ -11,6 +11,7 @@ from merkato.merkato import Merkato
 from merkato import merkato as main_merkato
 from merkato.utils import load_config, decrypt_keys, update_config_with_credentials, get_exchange, get_config_selection, encrypt, decrypt, ensure_bytes, generate_complete_merkato_configs, get_asset, get_reserve_balance, get_merkato_variable, load_exchange_by_merkato, twilio_wrapper, update_balances
 from merkato.utils.monthly_info_db_utils import insert_monthly_info, create_monthly_info_table, drop_monthly_info_table, get_all_monthyly_info
+from merkato.merkato_manager import Merkato_Manager
 
 import getpass
 import time
@@ -185,10 +186,38 @@ def process_start_option(option):
             return
 
         elif option == '8':
+            handle_save_merkato_orderbook()
+            return
+
+        elif option == '9':
             return False
 
         else:
             return False
+
+def handle_save_merkato_orderbook():
+    complete_merkato = select_and_get_complete_merkato()
+    password = getpass.getpass('Enter password for merkato: ')
+    decrypt_keys(config=complete_merkato['configuration'], password=password)
+    manager = Merkato_Manager(**complete_merkato)
+    manager.save_orderbook_to_txt()
+
+def select_and_get_complete_merkato():
+    merkatos = get_all_merkatos()
+    complete_merkato_configs = generate_complete_merkato_configs(merkatos)
+
+    print('Select Merkato from available IDs')
+    for counter, complete_config in enumerate(complete_merkato_configs):
+        exchange_name = complete_config['configuration']['exchange'] + '_' + complete_config['base'] + '_' + complete_config['coin']
+        print('{} -> {}'.format(counter + 1,  exchange_name))
+    selection = input('Selection: ')
+    num_selection = int(selection) - 1
+    selection_exists = len(complete_merkato_configs) > num_selection
+
+    if selection_exists:
+        return complete_merkato_configs[num_selection]
+    else:
+        return handle_save_merkato_orderbook()
 
 def handle_view_month_datas():
     monthly_infos = get_all_monthyly_info()
@@ -281,32 +310,20 @@ def handle_drop_selection():
         create_monthly_info_table()
 
 def handle_add_asset():
-    merkatos = get_all_merkatos()
-    complete_merkato_configs = generate_complete_merkato_configs(merkatos)
 
-    print('Select Merkato from available IDs')
-    for counter, complete_config in enumerate(complete_merkato_configs):
-        exchange_name = complete_config['configuration']['exchange'] + '_' + complete_config['base'] + '_' + complete_config['coin']
-        print('{} -> {}'.format(counter + 1,  exchange_name))
-    selection = input('Selection: ')
-    num_selection = int(selection) - 1
-    selection_exists = len(complete_merkato_configs) > num_selection
-
-    if selection_exists:
-        complete_config = complete_merkato_configs[num_selection]
+    complete_config = select_and_get_complete_merkato()
+    asset_to_add = input('Do you want to add to {} or {}: '.format(complete_config['coin'], complete_config['base']))
+    while asset_to_add != complete_config['coin'] and asset_to_add != complete_config['base']:
+        print('Wrong Asset, try again')
         asset_to_add = input('Do you want to add to {} or {}: '.format(complete_config['coin'], complete_config['base']))
-        while asset_to_add != complete_config['coin'] and asset_to_add != complete_config['base']:
-            print('Wrong Asset, try again')
-            asset_to_add = input('Do you want to add to {} or {}: '.format(complete_config['coin'], complete_config['base']))
 
-        amount_to_add = input('How much {} do you want to add: '.format(asset_to_add))
+    amount_to_add = input('How much {} do you want to add: '.format(asset_to_add))
 
-        password = getpass.getpass('Enter password for merkato: ')
-        decrypt_keys(config=complete_config['configuration'], password=password)
-        initialized_merkato = main_merkato.Merkato(**complete_config)
-        initialized_merkato.update_orders(asset_to_add, amount_to_add)
-    else:
-        handle_add_asset()
+    password = getpass.getpass('Enter password for merkato: ')
+    decrypt_keys(config=complete_config['configuration'], password=password)
+    initialized_merkato = main_merkato.Merkato(**complete_config)
+    initialized_merkato.update_orders(asset_to_add, amount_to_add)
+
 
 
 def start_merkatos(password=None):
