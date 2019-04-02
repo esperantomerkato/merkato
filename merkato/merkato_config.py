@@ -190,6 +190,10 @@ def process_start_option(option):
             return
 
         elif option == '9':
+            handle_cancel_merkato_orderbook()
+            return
+
+        elif option == '10':
             return False
 
         else:
@@ -201,6 +205,13 @@ def handle_save_merkato_orderbook():
     decrypt_keys(config=complete_merkato['configuration'], password=password)
     manager = Merkato_Manager(**complete_merkato)
     manager.save_orderbook_to_txt()
+
+def handle_cancel_merkato_orderbook():
+    complete_merkato = select_and_get_complete_merkato()
+    password = getpass.getpass('Enter password for merkato: ')
+    decrypt_keys(config=complete_merkato['configuration'], password=password)
+    manager = Merkato_Manager(**complete_merkato)
+    manager.remove_all_orders()
 
 def select_and_get_complete_merkato():
     merkatos = get_all_merkatos()

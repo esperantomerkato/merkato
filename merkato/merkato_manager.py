@@ -57,6 +57,9 @@ class Merkato_Manager(object):
         self.cancelrange(ONE_SATOSHI, ONE_BITCOIN) # Technically not all, but should be good enough
         kill_merkato(self.mutex_UUID)
 
+    def remove_all_orders(self):
+        self.cancelrange(ONE_SATOSHI, ONE_BITCOIN) # Technically not all, but should be good enough
+
     def update_buy_volume(self, raw_volume, price):
         finalized_volume = float(raw_volume) * float(price)
         self.buy_volume += finalized_volume

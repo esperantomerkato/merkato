@@ -121,7 +121,8 @@ def get_start_option():
     print("6 -> View all monthly data")
     print("7 -> Save all merkatos monthly_data")
     print("8 -> Save merkato orderbook to txt")
-    print("9 -> Exit")
+    print("9 -> remove all open orders from a merkato")
+    print("10 -> Exit")
     return input("Selection: ")
 
 def create_price_data(orders, order):
